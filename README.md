@@ -28,7 +28,7 @@ Now, define some environment variables or create a `.env` file on the root of th
 
 ```text
 BQ_PROJECT_ID=bigquery-project-id
-BQ_KEY_FILE=bigquery-service-account-json-key-file.json
+BQ_KEY_FILE=google-service-account-json-key-file.json
 BQ_DATASET=bigquery-dataset-name
 
 DB_DATABASE_NAME=mysql-database-name
@@ -38,6 +38,8 @@ DB_HOST=mysql-host
 DB_DRIVER=pdo_mysql
 ```
 
+PS: To create the `Google Service Account JSON Key File`, access [https://console.cloud.google.com/apis/credentials/serviceaccountkey](https://console.cloud.google.com/apis/credentials/serviceaccountkey)
+
 Run:
 
 ```bash
@@ -46,7 +48,7 @@ vendo/bin/console sync write-table-name-here
 
 ## Credits
 
-:heart: Memed SA
+:heart: Memed SA ([memed.com.br](https://memed.com.br))
 
 ## License
 
