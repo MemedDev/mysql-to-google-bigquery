@@ -1,4 +1,4 @@
-<p align="center">MySQL to Google BigQuery Sync Tool</p>
+<h1 align="center">MySQL to Google BigQuery Sync Tool</h1>
 
 ## Table of Contents
 
