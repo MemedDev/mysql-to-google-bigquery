@@ -80,6 +80,13 @@ class BigQuery
         ]);
     }
 
+    public function deleteTable($tableName)
+    {
+        $client = $this->getClient();
+        $dataset = $client->dataset($_ENV['BQ_DATASET']);
+        $dataset->table($tableName)->delete();
+    }
+
     public function getCountTableRows($tableName)
     {
         $this->getTablesMetadata();
@@ -97,13 +104,20 @@ class BigQuery
             return $this->client;
         }
 
-        if (! file_exists(__DIR__ . '/../../' . $_ENV['BQ_KEY_FILE'])) {
+        $keyFilePath = $_ENV['BQ_KEY_FILE'];
+
+        // Support relative and absolute path
+        if ($keyFilePath[0] !== '/') {
+            $keyFilePath = getcwd() . '/' . $keyFilePath;
+        }
+
+        if (! file_exists($keyFilePath)) {
             throw new \Exception('Google Service Account JSON Key File not found', 1);
         }
 
         return $this->client = new BigQueryClient([
             'projectId' => $_ENV['BQ_PROJECT_ID'],
-            'keyFile' => json_decode(file_get_contents(__DIR__ . '/../../' . $_ENV['BQ_KEY_FILE']), true),
+            'keyFile' => json_decode(file_get_contents($keyFilePath), true),
             'scopes' => [BigQueryClient::SCOPE]
         ]);
     }
@@ -162,5 +176,13 @@ class BigQuery
         }
 
         return true;
+    }
+
+    public function tableExists($tableName)
+    {
+        $client = $this->getClient();
+        $dataset = $client->dataset($_ENV['BQ_DATASET']);
+
+        return $dataset->table($tableName)->exists();
     }
 }

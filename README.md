@@ -52,6 +52,12 @@ If you want to auto create the table on BigQuery:
 vendor/bin/console sync table-name --create-table
 ```
 
+If you want to delete (and create) the table on BigQuery for a full dump:
+
+```bash
+vendor/bin/console sync table-name --delete-table
+```
+
 ## Credits
 
 :heart: Memed SA ([memed.com.br](https://memed.com.br))

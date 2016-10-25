@@ -28,8 +28,18 @@ class SyncService
     /**
      * Executes the service
      */
-    public function execute(string $tableName, bool $createTable, OutputInterface $output)
+    public function execute(string $tableName, bool $createTable, bool $deleteTable, OutputInterface $output)
     {
+        if ($deleteTable) {
+            // Delete the BigQuery Table before any operation
+            if ($this->bigQuery->tableExists($tableName)) {
+                $this->bigQuery->deleteTable($tableName);
+            }
+
+            // Create the table after deleting
+            $createTable = true;
+        }
+
         $mysqlCountTableRows = $this->mysql->getCountTableRows($tableName);
         $bigQueryCountTableRows = $this->bigQuery->getCountTableRows($tableName);
 

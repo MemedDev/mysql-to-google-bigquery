@@ -17,7 +17,8 @@ class SyncCommand extends Command
             ->setDescription('Sync a MySQL table to BigQuery')
             ->setHelp('This commands syncs data between a MySQL table and BigQuery')
             ->addArgument('table-name', InputArgument::REQUIRED, 'The name of the table you want to sync')
-            ->addOption('create-table', 'c', InputOption::VALUE_NONE, 'If BigQuery table doesn\'t exist, create it');
+            ->addOption('create-table', 'c', InputOption::VALUE_NONE, 'If BigQuery table doesn\'t exist, create it')
+            ->addOption('delete-table', 'd', InputOption::VALUE_NONE, 'Delete the BigQuery table before syncing');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -25,6 +26,11 @@ class SyncCommand extends Command
         $container = \DI\ContainerBuilder::buildDevContainer();
 
         $service = $container->get('MysqlToGoogleBigQuery\Services\SyncService');
-        $service->execute($input->getArgument('table-name'), $input->getOption('create-table'), $output);
+        $service->execute(
+            $input->getArgument('table-name'),
+            $input->getOption('create-table'),
+            $input->getOption('delete-table'),
+            $output
+        );
     }
 }
