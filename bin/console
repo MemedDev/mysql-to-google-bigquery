@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 foreach (['../../../autoload.php', '../../autoload.php', '../vendor/autoload.php', 'vendor/autoload.php'] as $autoload) {
-    $autoload = __DIR__.'/'.$autoload;
+    $autoload = __DIR__ . '/' . $autoload;
     if (file_exists($autoload)) {
         require $autoload;
         break;
@@ -12,8 +12,8 @@ use Symfony\Component\Console\Application;
 use MysqlToGoogleBigQuery\Console\Commands\SyncCommand;
 
 // Load the .env definitions
-if (file_exists(__DIR__ . '/../.env')) {
-    $dotenv = new Dotenv\Dotenv(__DIR__ . '/../');
+if (file_exists(getcwd(). '/.env')) {
+    $dotenv = new Dotenv\Dotenv(getcwd());
     $dotenv->load();
 }
 

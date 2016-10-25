@@ -97,6 +97,10 @@ class BigQuery
             return $this->client;
         }
 
+        if (! file_exists(__DIR__ . '/../../' . $_ENV['BQ_KEY_FILE'])) {
+            throw new \Exception('Google Service Account JSON Key File not found', 1);
+        }
+
         return $this->client = new BigQueryClient([
             'projectId' => $_ENV['BQ_PROJECT_ID'],
             'keyFile' => json_decode(file_get_contents(__DIR__ . '/../../' . $_ENV['BQ_KEY_FILE']), true),
