@@ -46,4 +46,14 @@ class Mysql
 
         throw new \Exception('Mysql table ' . $tableName . ' not found');
     }
+
+    public function getTableColumns($tableName)
+    {
+        $mysqlConnection = $this->getConnection();
+        $mysqlPlatform = $mysqlConnection->getDatabasePlatform();
+        $mysqlSchemaManager = $mysqlConnection->getSchemaManager();
+
+        $mysqlTableDetails = $mysqlSchemaManager->listTableDetails($tableName);
+        return $mysqlTableDetails->getColumns();
+    }
 }

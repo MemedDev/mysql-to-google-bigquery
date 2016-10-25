@@ -43,7 +43,13 @@ PS: To create the `Google Service Account JSON Key File`, access [https://consol
 Run:
 
 ```bash
-vendo/bin/console sync write-table-name-here
+vendor/bin/console sync table-name
+```
+
+If you want to auto create the table on BigQuery:
+
+```bash
+vendor/bin/console sync table-name --create-table
 ```
 
 ## Credits

@@ -1,6 +1,12 @@
 #!/usr/bin/env php
 <?php
-require __DIR__.'/../vendor/autoload.php';
+foreach (['../../autoload.php', '../vendor/autoload.php', 'vendor/autoload.php'] as $autoload) {
+    $autoload = __DIR__.'/'.$autoload;
+    if (file_exists($autoload)) {
+        require $autoload;
+        break;
+    }
+}
 
 use Symfony\Component\Console\Application;
 use MysqlToGoogleBigQuery\Console\Commands\SyncCommand;

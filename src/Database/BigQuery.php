@@ -1,6 +1,7 @@
 <?php
-namespace MysqlToGoogleBigQuery;
+namespace MysqlToGoogleBigQuery\Database;
 
+use Doctrine\DBAL\Types\Type;
 use Google\Cloud\BigQuery\BigQueryClient;
 
 class BigQuery
@@ -9,12 +10,82 @@ class BigQuery
     protected $errors;
     protected $tablesMetadata = [];
 
+    public function createTable($tableName, $mysqlTableColumns)
+    {
+        $bigQueryColumns = [];
+
+        // Valid types for BigQuery are:
+        // STRING, BYTES, INTEGER, FLOAT, BOOLEAN,
+        // TIMESTAMP, DATE, TIME, DATETIME
+        foreach ($mysqlTableColumns as $name => $column) {
+            switch ($column->getType()->getName()) {
+                case 'bigquerydatetime':
+                    $type = 'DATETIME';
+                    break;
+
+                case Type::BIGINT:
+                    $type = 'INTEGER';
+                    break;
+
+                case Type::BOOLEAN:
+                    $type = 'BOOLEAN';
+                    break;
+
+                case Type::DATE:
+                    $type = 'DATETIME';
+                    break;
+
+                case Type::DATETIME:
+                    $type = 'DATETIME';
+                    break;
+
+                case Type::DECIMAL:
+                    $type = 'FLOAT';
+                    break;
+
+                case Type::FLOAT:
+                    $type = 'FLOAT';
+                    break;
+
+                case Type::INTEGER:
+                    $type = 'INTEGER';
+                    break;
+
+                case Type::SMALLINT:
+                    $type = 'INTEGER';
+                    break;
+
+                case Type::TIME:
+                    $type = 'TIME';
+                    break;
+
+                default:
+                    $type = 'STRING';
+                    break;
+            }
+
+            $bigQueryColumns[] = [
+                'name' => $name,
+                'type' => $type
+            ];
+        }
+
+        $client = $this->getClient();
+        $dataset = $client->dataset($_ENV['BQ_DATASET']);
+
+        return $dataset->createTable($tableName, [
+            'schema' => [
+                'fields' => $bigQueryColumns
+            ],
+        ]);
+    }
+
     public function getCountTableRows($tableName)
     {
         $this->getTablesMetadata();
 
         if (! array_key_exists($tableName, $this->tablesMetadata)) {
-            throw new \Exception('BigQuery table ' . $tableName . ' not found');
+            return false;
         }
 
         return $this->tablesMetadata[$tableName]['row_count'];
@@ -28,7 +99,7 @@ class BigQuery
 
         return $this->client = new BigQueryClient([
             'projectId' => $_ENV['BQ_PROJECT_ID'],
-            'keyFile' => json_decode(file_get_contents(__DIR__ . '/../' . $_ENV['BQ_KEY_FILE']), true),
+            'keyFile' => json_decode(file_get_contents(__DIR__ . '/../../' . $_ENV['BQ_KEY_FILE']), true),
             'scopes' => [BigQueryClient::SCOPE]
         ]);
     }

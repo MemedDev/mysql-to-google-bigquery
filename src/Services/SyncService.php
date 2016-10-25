@@ -2,7 +2,7 @@
 namespace MysqlToGoogleBigQuery\Services;
 
 use Doctrine\DBAL\Types\Type;
-use MysqlToGoogleBigQuery\BigQuery;
+use MysqlToGoogleBigQuery\Database\BigQuery;
 use MysqlToGoogleBigQuery\Database\Mysql;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputInterface;
@@ -19,13 +19,27 @@ class SyncService
         $this->mysql = $mysql;
     }
 
+    protected function createTable($tableName)
+    {
+        $mysqlTableColumns = $this->mysql->getTableColumns($tableName);
+        $this->bigQuery->createTable($tableName, $mysqlTableColumns);
+    }
+
     /**
      * Executes the service
      */
-    public function execute(string $tableName, OutputInterface $output)
+    public function execute(string $tableName, bool $createTable, OutputInterface $output)
     {
         $mysqlCountTableRows = $this->mysql->getCountTableRows($tableName);
         $bigQueryCountTableRows = $this->bigQuery->getCountTableRows($tableName);
+
+        if ($bigQueryCountTableRows === false) {
+            if (! $createTable) {
+                throw new \Exception('BigQuery table ' . $tableName . ' not found');
+            }
+
+            $this->createTable($tableName);
+        }
 
         $rowsDiff = $mysqlCountTableRows - $bigQueryCountTableRows;
 
@@ -35,11 +49,10 @@ class SyncService
             return;
         }
 
-        $maxRowsPerBatch = 20000;
+        $maxRowsPerBatch = $_ENV['MAX_ROWS_PER_BATCH'] ? $_ENV['MAX_ROWS_PER_BATCH'] : 20000;
         $batches = ceil($rowsDiff / $maxRowsPerBatch);
 
         $output->writeln('<info>Sending ' . $batches . ' batches of ' . $maxRowsPerBatch . ' rows/batch</info>');
-
         $progress = new ProgressBar($output, $batches);
 
         for ($i = 0; $i < $batches; $i++) {
@@ -56,10 +69,7 @@ class SyncService
     {
         $mysqlConnection = $this->mysql->getConnection();
         $mysqlPlatform = $mysqlConnection->getDatabasePlatform();
-        $mysqlSchemaManager = $mysqlConnection->getSchemaManager();
-
-        $mysqlTableDetails = $mysqlSchemaManager->listTableDetails($tableName);
-        $mysqlTableColumns = $mysqlTableDetails->getColumns();
+        $mysqlTableColumns = $this->mysql->getTableColumns($tableName);
 
         $jsonFilePath = __DIR__ . '/../../cache/' . $tableName;
 
@@ -88,11 +98,6 @@ class SyncService
             }
 
             $string = json_encode($row);
-
-            if (empty($string)) {
-                var_dump($row);
-                die();
-            }
 
             // Google BigQuery needs JSON new line delimited file
             // Each line of the file will be each MySQL row converted to JSON
