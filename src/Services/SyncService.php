@@ -59,7 +59,7 @@ class SyncService
             return;
         }
 
-        $maxRowsPerBatch = $_ENV['MAX_ROWS_PER_BATCH'] ? $_ENV['MAX_ROWS_PER_BATCH'] : 20000;
+        $maxRowsPerBatch = (isset($_ENV['MAX_ROWS_PER_BATCH'])) ? $_ENV['MAX_ROWS_PER_BATCH'] : 20000;
         $batches = ceil($rowsDiff / $maxRowsPerBatch);
 
         $output->writeln('<info>Sending ' . $batches . ' batches of ' . $maxRowsPerBatch . ' rows/batch</info>');
@@ -120,8 +120,10 @@ class SyncService
         // Send JSON to BigQuery
         $success = $this->bigQuery->loadFromJson($json, $tableName);
 
+        unlink($jsonFilePath);
+
         if (! $success) {
-            throw new \Exception('BigQuery replied with errors: ' . implode(PHP_EOL, $this->bigQuery->getErrors()));
+            throw new \Exception('BigQuery replied with errors: ' . PHP_EOL . implode(PHP_EOL, $this->bigQuery->getErrors()));
         }
     }
 }

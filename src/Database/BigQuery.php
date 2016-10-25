@@ -19,6 +19,10 @@ class BigQuery
         // TIMESTAMP, DATE, TIME, DATETIME
         foreach ($mysqlTableColumns as $name => $column) {
             switch ($column->getType()->getName()) {
+                case 'bigquerydate':
+                    $type = 'DATE';
+                    break;
+
                 case 'bigquerydatetime':
                     $type = 'DATETIME';
                     break;
@@ -169,7 +173,7 @@ class BigQuery
             && count($jobInfo['status']['errors']) > 0
         ) {
             foreach ($jobInfo['status']['errors'] as $error) {
-                $errors[] = $error['message'];
+                $this->errors[] = $error['message'];
             }
 
             return false;
