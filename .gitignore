@@ -1,0 +1,5 @@
+vendor/
+cache/
+key.json
+keyfile.json
+.env

@@ -1,0 +1,19 @@
+#!/usr/bin/env php
+<?php
+require __DIR__.'/../vendor/autoload.php';
+
+use Symfony\Component\Console\Application;
+use MysqlToGoogleBigQuery\Console\Commands\SyncCommand;
+
+// Load the .env definitions
+if (file_exists(__DIR__ . '/../.env')) {
+    $dotenv = new Dotenv\Dotenv(__DIR__ . '/../');
+    $dotenv->load();
+}
+
+$application = new Application();
+
+// Lista de comandos
+$application->add(new SyncCommand());
+
+$application->run();
