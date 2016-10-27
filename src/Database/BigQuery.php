@@ -7,9 +7,14 @@ use Google\Cloud\BigQuery\BigQueryClient;
 class BigQuery
 {
     protected $client;
-    protected $errors;
     protected $tablesMetadata = [];
 
+    /**
+     * Create a BigQuery Table based on MySQL Table columns
+     * @param  string $tableName           Table Name
+     * @param  array  $mysqlTableColumns   Array of Doctrine\DBAL\Schema\Column
+     * @return Google\Cloud\BigQuery\Table Table object
+     */
     public function createTable($tableName, $mysqlTableColumns)
     {
         $bigQueryColumns = [];
@@ -84,14 +89,23 @@ class BigQuery
         ]);
     }
 
-    public function deleteTable($tableName)
+    /**
+     * Delete a BigQuery Table
+     * @param  string $tableName Table Name
+     */
+    public function deleteTable(string $tableName)
     {
         $client = $this->getClient();
         $dataset = $client->dataset($_ENV['BQ_DATASET']);
         $dataset->table($tableName)->delete();
     }
 
-    public function getCountTableRows($tableName)
+    /**
+     * Get the number of rows on a table
+     * @param  string $tableName Table name
+     * @return int|bool          false if table doesn't exists, or the number of rows
+     */
+    public function getCountTableRows(string $tableName)
     {
         $this->getTablesMetadata();
 
@@ -102,6 +116,10 @@ class BigQuery
         return $this->tablesMetadata[$tableName]['row_count'];
     }
 
+    /**
+     * Get BigQuery API Client
+     * @return BigQueryClient BigQuery API Client
+     */
     public function getClient()
     {
         if ($this->client) {
@@ -126,11 +144,12 @@ class BigQuery
         ]);
     }
 
-    public function getErrors()
-    {
-        return $this->errors;
-    }
-
+    /**
+     * Get table metadata
+     * See https://cloud.google.com/bigquery/querying-data#metadata_about_tables_in_a_dataset
+     *
+     * @return array Array with all dataset tables information
+     */
     public function getTablesMetadata()
     {
         $client = $this->getClient();
@@ -143,10 +162,14 @@ class BigQuery
         return $this->tablesMetadata;
     }
 
+    /**
+     * Load data to BigQuery reading it from JSON NEWLINE DELIMITED File
+     * @param  resource|string $file                Resource or String (path) of JSON file
+     * @param  string          $tableName           Table Name
+     * @return Google\Cloud\BigQuery\Job            BigQuery Data Load Job
+     */
     public function loadFromJson($file, $tableName)
     {
-        $this->errors = [];
-
         $client = $this->getClient();
         $dataset = $client->dataset($_ENV['BQ_DATASET']);
         $table = $dataset->table($tableName);
@@ -160,29 +183,15 @@ class BigQuery
             ]
         );
 
-        $jobInfo = $job->info();
-
-        while ($jobInfo['status']['state'] === 'RUNNING') {
-            echo '.';
-            $jobInfo = $job->reload();
-            sleep(1);
-        }
-
-        if (array_key_exists('errors', $jobInfo['status'])
-            && is_array($jobInfo['status']['errors'])
-            && count($jobInfo['status']['errors']) > 0
-        ) {
-            foreach ($jobInfo['status']['errors'] as $error) {
-                $this->errors[] = $error['message'];
-            }
-
-            return false;
-        }
-
-        return true;
+        return $job;
     }
 
-    public function tableExists($tableName)
+    /**
+     * Check if a BigQuery table existis
+     * @param  string $tableName Table name
+     * @return bool              True if table exists
+     */
+    public function tableExists(string $tableName)
     {
         $client = $this->getClient();
         $dataset = $client->dataset($_ENV['BQ_DATASET']);

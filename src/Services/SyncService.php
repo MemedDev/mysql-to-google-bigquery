@@ -11,6 +11,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 class SyncService
 {
     protected $bigQuery;
+    protected $currentJob;
     protected $mysql;
 
     public function __construct(BigQuery $bigQuery, Mysql $mysql)
@@ -19,17 +20,34 @@ class SyncService
         $this->mysql = $mysql;
     }
 
-    protected function createTable($tableName)
+    /**
+     * Create a BigQuery table using MySQL table schema
+     * @param  string $databaseName Database name
+     * @param  string $tableName    Table name
+     */
+    protected function createTable(string $databaseName, string $tableName)
     {
-        $mysqlTableColumns = $this->mysql->getTableColumns($tableName);
+        $mysqlTableColumns = $this->mysql->getTableColumns($databaseName, $tableName);
         $this->bigQuery->createTable($tableName, $mysqlTableColumns);
     }
 
     /**
-     * Executes the service
+     * Execute the service, syncing MySQL and BigQuery table
+     * @param  string          $databaseName  Database Name
+     * @param  string          $tableName     Table Name
+     * @param  bool            $createTable   If BigQuery table doesn't exists, create
+     * @param  bool            $deleteTable   If BigQuery table exists, delete and recreate
+     * @param  array           $ignoreColumns Ignore columns from syncing
+     * @param  OutputInterface $output        Output
      */
-    public function execute(string $tableName, bool $createTable, bool $deleteTable, OutputInterface $output)
-    {
+    public function execute(
+        string $databaseName,
+        string $tableName,
+        bool $createTable,
+        bool $deleteTable,
+        array $ignoreColumns,
+        OutputInterface $output
+    ) {
         if ($deleteTable) {
             // Delete the BigQuery Table before any operation
             if ($this->bigQuery->tableExists($tableName)) {
@@ -40,7 +58,7 @@ class SyncService
             $createTable = true;
         }
 
-        $mysqlCountTableRows = $this->mysql->getCountTableRows($tableName);
+        $mysqlCountTableRows = $this->mysql->getCountTableRows($databaseName, $tableName);
         $bigQueryCountTableRows = $this->bigQuery->getCountTableRows($tableName);
 
         if ($bigQueryCountTableRows === false) {
@@ -48,7 +66,7 @@ class SyncService
                 throw new \Exception('BigQuery table ' . $tableName . ' not found');
             }
 
-            $this->createTable($tableName);
+            $this->createTable($databaseName, $tableName);
         }
 
         $rowsDiff = $mysqlCountTableRows - $bigQueryCountTableRows;
@@ -67,7 +85,7 @@ class SyncService
 
         for ($i = 0; $i < $batches; $i++) {
             $offset = $bigQueryCountTableRows + ($i * $maxRowsPerBatch);
-            $this->sendBatch($tableName, $offset, $maxRowsPerBatch);
+            $this->sendBatch($databaseName, $tableName, $ignoreColumns, $offset, $maxRowsPerBatch);
             $progress->advance();
         }
 
@@ -75,11 +93,19 @@ class SyncService
         $output->writeln('<fg=green>Synced!</>');
     }
 
-    protected function sendBatch(string $tableName, int $offset, int $limit)
+    /**
+     * Send a batch of data
+     * @param  string $databaseName  Database name
+     * @param  string $tableName     Table name
+     * @param  array  $ignoreColumns Ignore columns from syncing
+     * @param  int    $offset        Initial MySQL rows offset
+     * @param  int    $limit         MySQL rows limit, per batch
+     */
+    protected function sendBatch(string $databaseName, string $tableName, array $ignoreColumns, int $offset, int $limit)
     {
-        $mysqlConnection = $this->mysql->getConnection();
+        $mysqlConnection = $this->mysql->getConnection($databaseName);
         $mysqlPlatform = $mysqlConnection->getDatabasePlatform();
-        $mysqlTableColumns = $this->mysql->getTableColumns($tableName);
+        $mysqlTableColumns = $this->mysql->getTableColumns($databaseName, $tableName);
 
         $jsonFilePath = __DIR__ . '/../../cache/' . $tableName;
 
@@ -93,6 +119,12 @@ class SyncService
 
         while ($row = $mysqlQueryResult->fetch()) {
             foreach ($row as $key => $value) {
+                // Ignore the column
+                if (in_array($key, $ignoreColumns)) {
+                    unset($row[$key]);
+                    continue;
+                }
+
                 // Convert to PHP values, BigQuery requires the correct types on JSON
                 $type = $mysqlTableColumns[$key]->getType();
 
@@ -117,13 +149,49 @@ class SyncService
         // Rewind to the beginning of the JSON file
         rewind($json);
 
+        // We have a job running, waits to send the next
+        if ($this->currentJob) {
+            $this->waitJob($this->currentJob);
+        }
+
         // Send JSON to BigQuery
-        $success = $this->bigQuery->loadFromJson($json, $tableName);
+        $job = $this->bigQuery->loadFromJson($json, $tableName);
+
+        // This is the first job, waits for a first success to continue
+        if (! $this->currentJob) {
+            $this->waitJob($job);
+        }
+
+        $this->currentJob = $job;
 
         unlink($jsonFilePath);
+    }
 
-        if (! $success) {
-            throw new \Exception('BigQuery replied with errors: ' . PHP_EOL . implode(PHP_EOL, $this->bigQuery->getErrors()));
+    /**
+     * Wait for a BigQuery Job
+     * @param  Google\Cloud\BigQuery\Job $job BigQuery Job
+     */
+    protected function waitJob($job)
+    {
+        $errors = [];
+        $jobInfo = $job->info();
+
+        while ($jobInfo['status']['state'] === 'RUNNING') {
+            echo '.';
+            $jobInfo = $job->reload();
+            // Wait a second to retry
+            sleep(1);
+        }
+
+        if (array_key_exists('errors', $jobInfo['status'])
+            && is_array($jobInfo['status']['errors'])
+            && count($jobInfo['status']['errors']) > 0
+        ) {
+            foreach ($jobInfo['status']['errors'] as $error) {
+                $errors[] = $error['message'];
+            }
+
+            throw new \Exception('BigQuery replied with errors: ' . PHP_EOL . implode(PHP_EOL, $errors));
         }
     }
 }
