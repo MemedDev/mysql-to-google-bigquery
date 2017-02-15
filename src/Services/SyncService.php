@@ -61,7 +61,7 @@ class SyncService
         $mysqlCountTableRows = $this->mysql->getCountTableRows($databaseName, $tableName);
         $bigQueryCountTableRows = $this->bigQuery->getCountTableRows($tableName);
 
-        if ($bigQueryCountTableRows === false) {
+        if (! $this->bigQuery->tableExists($tableName)) {
             if (! $createTable) {
                 throw new \Exception('BigQuery table ' . $tableName . ' not found');
             }

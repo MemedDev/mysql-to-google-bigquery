@@ -153,7 +153,9 @@ class BigQuery
     public function getTablesMetadata()
     {
         $client = $this->getClient();
-        $queryResults = $client->runQuery('SELECT * FROM ' . $_ENV['BQ_DATASET'] . '.__TABLES__;');
+        $queryResults = $client->runQuery('SELECT * FROM ' . $_ENV['BQ_DATASET'] . '.__TABLES__;', [
+            'useQueryCache' => false
+        ]);
 
         foreach ($queryResults->rows() as $row) {
             $this->tablesMetadata[$row['table_id']] = $row;
@@ -187,7 +189,7 @@ class BigQuery
     }
 
     /**
-     * Check if a BigQuery table existis
+     * Check if a BigQuery table exists
      * @param  string $tableName Table name
      * @return bool              True if table exists
      */
