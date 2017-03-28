@@ -125,8 +125,9 @@ class SyncService
                     continue;
                 }
 
-                // Convert to PHP values, BigQuery requires the correct types on JSON
-                $type = $mysqlTableColumns[$key]->getType();
+                // Convert to PHP values, BigQuery requires the correct types on JSON, uppercase is not supported by
+                // BigQuery - make keys lowercase
+                $type = $mysqlTableColumns[strtolower($key)]->getType();
 
                 if ($type->getName() !== Type::STRING
                     && $type->getName() !== Type::TEXT
