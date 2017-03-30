@@ -22,7 +22,16 @@ class SyncCommand extends Command
             ->addArgument('table-name', InputArgument::REQUIRED, 'The name of the table you want to sync')
             ->addOption('create-table', 'c', InputOption::VALUE_NONE, 'If BigQuery table doesn\'t exist, create it')
             ->addOption('delete-table', 'd', InputOption::VALUE_NONE, 'Delete the BigQuery table before syncing')
-            ->addOption('ignore-column', 'i', InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'Ignore a column from syncing. You can use this option multiple times')
+            ->addOption(
+                'order-column',
+                'o',
+                InputOption::VALUE_OPTIONAL,
+                'Column to order the results by. This column is also used to determine if new rows have to be synced.')
+            ->addOption(
+                'ignore-column',
+                'i',
+                InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY,
+                'Ignore a column from syncing. You can use this option multiple times')
             ->addOption('database-name', null, InputOption::VALUE_OPTIONAL, 'MySQL database name');
     }
 
@@ -39,6 +48,12 @@ class SyncCommand extends Command
             $ignoreColumns = explode(',', $_ENV['IGNORE_COLUMNS']);
         }
 
+        $orderColumn = $input->getOption('order-column');
+
+        if (empty($orderColumn) && isset($_ENV['ORDER_COLUMN'])) {
+            $orderColumn = $_ENV['ORDER_COLUMN'];
+        }
+
         $databaseName = $input->getOption('database-name');
 
         if (empty($databaseName)) {
@@ -51,6 +66,7 @@ class SyncCommand extends Command
             $input->getArgument('table-name'),
             $input->getOption('create-table'),
             $input->getOption('delete-table'),
+            $orderColumn,
             $ignoreColumns,
             $output
         );

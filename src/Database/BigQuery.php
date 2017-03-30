@@ -117,6 +117,27 @@ class BigQuery
     }
 
     /**
+     * Get the maximum value of a column
+     * @param  string $tableName Table name
+     * @param  string $columnName   Column name
+     * @return string               Max value
+     */
+    public function getMaxColumnValue(string $tableName, string $columnName)
+    {
+        $client = $this->getClient();
+
+        $result = $client->runQuery(
+            'SELECT MAX(' . $columnName . ') AS columnMax FROM [' . $_ENV['BQ_DATASET'] . '.' .  $tableName . ']'
+        );
+
+        foreach ($result->rows() as $row) {
+            return $row['columnMax'];
+        }
+
+        return false;
+    }
+
+    /**
      * Get BigQuery API Client
      * @return BigQueryClient BigQuery API Client
      */

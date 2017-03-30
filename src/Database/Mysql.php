@@ -57,14 +57,40 @@ class Mysql
      * Get the number of rows on a table
      * @param  string $databaseName Database name
      * @param  string $tableName    Table name
+     * @param  string $columnName   Column name
+     * @param  string $columnValue  Column value
      * @return int                  Number of rows
      */
-    public function getCountTableRows(string $databaseName, string $tableName)
+    public function getCountTableRows(string $databaseName, string $tableName, string $columnName, string $columnValue)
     {
-        $mysqlQueryResult = $this->getConnection($databaseName)->query('SELECT COUNT(*) AS count FROM `' . $tableName . '`');
+        if ($columnName && $columnValue) {
+            $mysqlQueryResult = $this->getConnection($databaseName)->query(
+                'SELECT COUNT(*) AS count FROM `' . $tableName . '` WHERE ' . $columnName . ' > "' . $columnValue . '"'
+            );
+        } else {
+            $mysqlQueryResult = $this->getConnection($databaseName)->query('SELECT COUNT(*) AS count FROM `' . $tableName . '`');
+        }
 
         while ($row = $mysqlQueryResult->fetch()) {
             return (int) $row['count'];
+        }
+
+        throw new \Exception('Mysql table ' . $tableName . ' not found');
+    }
+
+    /**
+     * Get the maximum value of a column of a table
+     * @param  string $databaseName Database name
+     * @param  string $tableName    Table name
+     * @param  string $columnName   Column name
+     * @return string               Max value
+     */
+    public function getMaxColumnValue(string $databaseName, string $tableName, string $columnName)
+    {
+        $mysqlQueryResult = $this->getConnection($databaseName)->query('SELECT MAX(' . $columnName . ') AS columnMax FROM `' . $tableName . '`');
+
+        while ($row = $mysqlQueryResult->fetch()) {
+            return $row['columnMax'];
         }
 
         throw new \Exception('Mysql table ' . $tableName . ' not found');

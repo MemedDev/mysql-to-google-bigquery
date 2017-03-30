@@ -37,6 +37,7 @@ class SyncService
      * @param  string          $tableName     Table Name
      * @param  bool            $createTable   If BigQuery table doesn't exists, create
      * @param  bool            $deleteTable   If BigQuery table exists, delete and recreate
+     * @param  string          $orderColumn   Column to sort and compare result sets
      * @param  array           $ignoreColumns Ignore columns from syncing
      * @param  OutputInterface $output        Output
      */
@@ -45,6 +46,7 @@ class SyncService
         string $tableName,
         bool $createTable,
         bool $deleteTable,
+        string $orderColumn,
         array $ignoreColumns,
         OutputInterface $output
     ) {
@@ -58,11 +60,23 @@ class SyncService
             $createTable = true;
         }
 
-        $mysqlCountTableRows = $this->mysql->getCountTableRows($databaseName, $tableName);
-        $bigQueryCountTableRows = $this->bigQuery->getCountTableRows($tableName);
+        if ($orderColumn) {
+            $mysqlMaxColumnValue = $this->mysql->getMaxColumnValue($databaseName, $tableName, $orderColumn);
+            $bigQueryMaxColumnValue = $this->bigQuery->getMaxColumnValue($tableName, $orderColumn);
 
-        if (! $this->bigQuery->tableExists($tableName)) {
-            if (! $createTable) {
+            if (strcmp($mysqlMaxColumnValue, $bigQueryMaxColumnValue) === 0) {
+                $output->writeln('<fg=green>Already synced!</>');
+                return;
+            }
+        } else {
+            $bigQueryMaxColumnValue = false;
+        }
+
+        $mysqlCountTableRows = $this->mysql->getCountTableRows($databaseName, $tableName, $orderColumn, $bigQueryMaxColumnValue);
+        $bigQueryCountTableRows = $orderColumn ? 0 : $this->bigQuery->getCountTableRows($tableName, $orderColumn);
+
+        if (!$this->bigQuery->tableExists($tableName)) {
+            if (!$createTable) {
                 throw new \Exception('BigQuery table ' . $tableName . ' not found');
             }
 
@@ -75,6 +89,8 @@ class SyncService
         if ($rowsDiff <= 0) {
             $output->writeln('<fg=green>Already synced!</>');
             return;
+        } else {
+            $output->writeln('<fg=green>Syncing ' . $rowsDiff . ' rows</>');
         }
 
         $maxRowsPerBatch = (isset($_ENV['MAX_ROWS_PER_BATCH'])) ? $_ENV['MAX_ROWS_PER_BATCH'] : 20000;
@@ -85,7 +101,8 @@ class SyncService
 
         for ($i = 0; $i < $batches; $i++) {
             $offset = $bigQueryCountTableRows + ($i * $maxRowsPerBatch);
-            $this->sendBatch($databaseName, $tableName, $ignoreColumns, $offset, $maxRowsPerBatch);
+            $this->sendBatch($databaseName, $tableName, $orderColumn, $ignoreColumns,
+                             $offset, $maxRowsPerBatch, $bigQueryMaxColumnValue);
             $progress->advance();
         }
 
@@ -101,7 +118,8 @@ class SyncService
      * @param  int    $offset        Initial MySQL rows offset
      * @param  int    $limit         MySQL rows limit, per batch
      */
-    protected function sendBatch(string $databaseName, string $tableName, array $ignoreColumns, int $offset, int $limit)
+    protected function sendBatch(string $databaseName, string $tableName, string $orderColumn,
+                                 array $ignoreColumns, int $offset, int $limit, $orderColumnOffset)
     {
         $mysqlConnection = $this->mysql->getConnection($databaseName);
         $mysqlPlatform = $mysqlConnection->getDatabasePlatform();
@@ -115,7 +133,22 @@ class SyncService
 
         $json = fopen($jsonFilePath, 'a+');
 
-        $mysqlQueryResult = $mysqlConnection->query('SELECT * FROM `' . $tableName . '` LIMIT ' . $offset . ', ' . $limit);
+        if ($orderColumn) {
+            if ($orderColumnOffset) {
+                $mysqlQueryResult = $mysqlConnection->query(
+                    'SELECT * FROM `' . $tableName . '`' .
+                    ' WHERE ' . $orderColumn . ' > "' . $orderColumnOffset . '"' .
+                    ' ORDER BY ' . $orderColumn .
+                    ' LIMIT '. $offset . ', ' . $limit
+                );
+            } else {
+                $mysqlQueryResult = $mysqlConnection->query(
+                    'SELECT * FROM `' . $tableName . '` ORDER BY ' . $orderColumn . ' LIMIT '. $offset . ', ' . $limit
+                );
+            }
+        } else {
+            $mysqlQueryResult = $mysqlConnection->query('SELECT * FROM `' . $tableName . '` LIMIT ' . $offset . ', ' . $limit);
+        }
 
         while ($row = $mysqlQueryResult->fetch()) {
             foreach ($row as $key => $value) {
