@@ -28,7 +28,6 @@ Tip: Create a cron job for keep syncing the tables using an interval like 15 min
 
 The following PHP versions are supported:
 
-+ PHP 5.6
 + PHP 7
 + HHVM
 + PDO Extension with MySQL driver
