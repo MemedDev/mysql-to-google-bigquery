@@ -61,7 +61,7 @@ class Mysql
      */
     public function getCountTableRows(string $databaseName, string $tableName)
     {
-        $mysqlQueryResult = $this->getConnection($databaseName)->query('SELECT COUNT(*) AS count FROM ' . $tableName);
+        $mysqlQueryResult = $this->getConnection($databaseName)->query('SELECT COUNT(*) AS count FROM `' . $tableName . '`');
 
         while ($row = $mysqlQueryResult->fetch()) {
             return (int) $row['count'];

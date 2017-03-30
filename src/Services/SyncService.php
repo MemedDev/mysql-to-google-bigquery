@@ -115,7 +115,7 @@ class SyncService
 
         $json = fopen($jsonFilePath, 'a+');
 
-        $mysqlQueryResult = $mysqlConnection->query('SELECT * FROM ' . $tableName . ' LIMIT ' . $offset . ', ' . $limit);
+        $mysqlQueryResult = $mysqlConnection->query('SELECT * FROM `' . $tableName . '` LIMIT ' . $offset . ', ' . $limit);
 
         while ($row = $mysqlQueryResult->fetch()) {
             foreach ($row as $key => $value) {
