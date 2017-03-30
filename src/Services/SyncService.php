@@ -107,7 +107,7 @@ class SyncService
         $mysqlPlatform = $mysqlConnection->getDatabasePlatform();
         $mysqlTableColumns = $this->mysql->getTableColumns($databaseName, $tableName);
 
-        $jsonFilePath = __DIR__ . '/../../cache/' . $tableName;
+        $jsonFilePath = ((isset($_ENV['CACHE_DIR'])) ? $_ENV['CACHE_DIR'] : __DIR__ . '/../../cache/') . $tableName;
 
         if (file_exists($jsonFilePath)) {
             unlink($jsonFilePath);
