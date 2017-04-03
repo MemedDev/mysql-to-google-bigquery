@@ -60,21 +60,6 @@ class SyncService
             $createTable = true;
         }
 
-        if ($orderColumn) {
-            $mysqlMaxColumnValue = $this->mysql->getMaxColumnValue($databaseName, $tableName, $orderColumn);
-            $bigQueryMaxColumnValue = $this->bigQuery->getMaxColumnValue($tableName, $orderColumn);
-
-            if (strcmp($mysqlMaxColumnValue, $bigQueryMaxColumnValue) === 0) {
-                $output->writeln('<fg=green>Already synced!</>');
-                return;
-            }
-        } else {
-            $bigQueryMaxColumnValue = false;
-        }
-
-        $mysqlCountTableRows = $this->mysql->getCountTableRows($databaseName, $tableName, $orderColumn, $bigQueryMaxColumnValue);
-        $bigQueryCountTableRows = $orderColumn ? 0 : $this->bigQuery->getCountTableRows($tableName, $orderColumn);
-
         if (!$this->bigQuery->tableExists($tableName)) {
             if (!$createTable) {
                 throw new \Exception('BigQuery table ' . $tableName . ' not found');
@@ -82,6 +67,40 @@ class SyncService
 
             $this->createTable($databaseName, $tableName);
         }
+
+        if ($orderColumn) {
+            $output->writeln('<fg=green>Using order column "' . $orderColumn . '"</>');
+
+            $mysqlMaxColumnValue = $this->mysql->getMaxColumnValue($databaseName, $tableName, $orderColumn);
+            $bigQueryMaxColumnValue = $this->bigQuery->getMaxColumnValue($tableName, $orderColumn);
+
+            if (strcmp($mysqlMaxColumnValue, $bigQueryMaxColumnValue) === 0) {
+                $output->writeln('<fg=green>Already synced!</>');
+                return;
+            }
+
+            /**
+             * Nothing to delete on a empty table
+             */
+            if ($bigQueryMaxColumnValue) {
+                /**
+                 * Delete latest values, there are no primary keys in bigQuery so we miss some values
+                 */
+                $this->bigQuery->deleteColumnValue($tableName, $orderColumn, $bigQueryMaxColumnValue);
+
+                /**
+                 * Now get the latest "real" value
+                 */
+                $bigQueryMaxColumnValue = $this->bigQuery->getMaxColumnValue($tableName, $orderColumn);
+            } else {
+                $bigQueryMaxColumnValue = false;
+            }
+        } else {
+            $bigQueryMaxColumnValue = false;
+        }
+
+        $mysqlCountTableRows = $this->mysql->getCountTableRows($databaseName, $tableName, $orderColumn, $bigQueryMaxColumnValue);
+        $bigQueryCountTableRows = $orderColumn ? 0 : $this->bigQuery->getCountTableRows($tableName, $orderColumn);
 
         $rowsDiff = $mysqlCountTableRows - $bigQueryCountTableRows;
 
@@ -106,8 +125,8 @@ class SyncService
             $progress->advance();
         }
 
-        $progress->finish();
         $output->writeln('<fg=green>Synced!</>');
+        $progress->finish();
     }
 
     /**

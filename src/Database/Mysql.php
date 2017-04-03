@@ -65,7 +65,7 @@ class Mysql
     {
         if ($columnName && $columnValue) {
             $mysqlQueryResult = $this->getConnection($databaseName)->query(
-                'SELECT COUNT(*) AS count FROM `' . $tableName . '` WHERE ' . $columnName . ' > "' . $columnValue . '"'
+                'SELECT COUNT(*) AS count FROM `' . $tableName . '` WHERE ' . $columnName . ' >= "' . $columnValue . '"'
             );
         } else {
             $mysqlQueryResult = $this->getConnection($databaseName)->query('SELECT COUNT(*) AS count FROM `' . $tableName . '`');

@@ -138,6 +138,26 @@ class BigQuery
     }
 
     /**
+     * Delete all values of a column
+     * @param  string $tableName Table name
+     * @param  string $columnName   Column name
+     * @param  string $columnValue  Value to be deleted
+     * @return string               Result
+     */
+    public function deleteColumnValue(string $tableName, string $columnName, string $columnValue)
+    {
+        $client = $this->getClient();
+
+        $result = $client->runQuery(
+            'DELETE FROM `' . $_ENV['BQ_DATASET'] . '.' .  $tableName . '`' .
+            ' WHERE `' . $columnName .'` = "' . $columnValue . '"',
+            ['useLegacySql' => false]
+        );
+
+        return $result;
+    }
+
+    /**
      * Get BigQuery API Client
      * @return BigQueryClient BigQuery API Client
      */
