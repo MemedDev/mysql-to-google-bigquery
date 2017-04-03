@@ -86,12 +86,17 @@ class SyncService
                 /**
                  * Delete latest values, there are no primary keys in bigQuery so we miss some values
                  */
+                $output->writeln(
+                    '<fg=yellow>Cleaning "' . $tableName . '" for "' .
+                    $orderColumn . '" = "' . $bigQueryMaxColumnValue . '"</>'
+                );
                 $this->bigQuery->deleteColumnValue($tableName, $orderColumn, $bigQueryMaxColumnValue);
 
                 /**
                  * Now get the latest "real" value
                  */
                 $bigQueryMaxColumnValue = $this->bigQuery->getMaxColumnValue($tableName, $orderColumn);
+                $output->writeln('<fg=green>Order column offset: "' . $bigQueryMaxColumnValue . '"</>');
             } else {
                 $bigQueryMaxColumnValue = false;
             }

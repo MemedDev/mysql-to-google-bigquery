@@ -127,8 +127,15 @@ class BigQuery
         $client = $this->getClient();
 
         $result = $client->runQuery(
-            'SELECT MAX(' . $columnName . ') AS columnMax FROM [' . $_ENV['BQ_DATASET'] . '.' .  $tableName . ']'
+            'SELECT MAX([' . $columnName . ']) AS columnMax FROM [' . $_ENV['BQ_DATASET'] . '.' .  $tableName . ']'
         );
+
+        $isComplete = $result->isComplete();
+        while (!$isComplete) {
+            sleep(1);
+            $result->reload();
+            $isComplete = $result->isComplete();
+        }
 
         foreach ($result->rows() as $row) {
             return $row['columnMax'];
@@ -153,6 +160,13 @@ class BigQuery
             ' WHERE `' . $columnName .'` = "' . $columnValue . '"',
             ['useLegacySql' => false]
         );
+
+        $isComplete = $result->isComplete();
+        while (!$isComplete) {
+            sleep(1);
+            $result->reload();
+            $isComplete = $result->isComplete();
+        }
 
         return $result;
     }
