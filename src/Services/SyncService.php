@@ -96,7 +96,7 @@ class SyncService
                  * Now get the latest "real" value
                  */
                 $bigQueryMaxColumnValue = $this->bigQuery->getMaxColumnValue($tableName, $orderColumn);
-                $output->writeln('<fg=green>Order column offset: "' . $bigQueryMaxColumnValue . '"</>');
+                $output->writeln('<fg=green>Syncing from "' . $bigQueryMaxColumnValue . '"</>');
             } else {
                 $bigQueryMaxColumnValue = false;
             }
