@@ -12,12 +12,26 @@
 
 ## How it works
 
-Steps:
+Steps when no order column has been supplied:
 
 + Count MySQL table rows
 + Count BigQuery table rows
 + MySQL rows > BigQuery rows?
 + Get the rows diff, split in batches of XXXXX rows/batch
+
+Steps when order column has been supplied:
+
++ Get max value for order column from MySQL table
++ Get max value for order column from BigQuery table
++ Max value MySQL > Max value BigQuery?
++ Delete all rows with order column value = max value BigQuery 
+to make sure no duplicate records are being created in BigQuery
++ Get max value for order column from BigQuery table
++ Get the rows diff based on new max value BigQuery, 
+split in batches of XXXXX rows/batch
+
+Final three steps:
+
 + Dump MySQL rows to a JSON
 + Send JSON to BigQuery
 + Repeat until all batches are sent
