@@ -155,9 +155,14 @@ class BigQuery
     {
         $client = $this->getClient();
 
+        // Non numeric values needs ""
+        if (! is_numeric($columnValue)) {
+            $columnValue = '"' . $columnValue . '"';
+        }
+
         $result = $client->runQuery(
             'DELETE FROM `' . $_ENV['BQ_DATASET'] . '.' .  $tableName . '`' .
-            ' WHERE `' . $columnName .'` = "' . $columnValue . '"',
+            ' WHERE `' . $columnName .'` = ' . $columnValue,
             ['useLegacySql' => false]
         );
 
