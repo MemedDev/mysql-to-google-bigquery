@@ -46,7 +46,7 @@ class SyncService
         string $tableName,
         bool $createTable,
         bool $deleteTable,
-        string $orderColumn,
+        $orderColumn,
         array $ignoreColumns,
         OutputInterface $output
     ) {
