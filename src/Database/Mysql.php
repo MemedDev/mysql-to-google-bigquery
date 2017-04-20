@@ -61,7 +61,7 @@ class Mysql
      * @param  string $columnValue  Column value
      * @return int                  Number of rows
      */
-    public function getCountTableRows(string $databaseName, string $tableName, string $columnName, string $columnValue)
+    public function getCountTableRows(string $databaseName, string $tableName, $columnName = null, $columnValue = null)
     {
         if ($columnName && $columnValue) {
             $mysqlQueryResult = $this->getConnection($databaseName)->query(
