@@ -125,8 +125,15 @@ class SyncService
 
         for ($i = 0; $i < $batches; $i++) {
             $offset = $bigQueryCountTableRows + ($i * $maxRowsPerBatch);
-            $this->sendBatch($databaseName, $tableName, $orderColumn, $ignoreColumns,
-                             $offset, $maxRowsPerBatch, $bigQueryMaxColumnValue);
+            $this->sendBatch(
+                $databaseName,
+                $tableName,
+                $orderColumn,
+                $ignoreColumns,
+                $offset,
+                $maxRowsPerBatch,
+                $bigQueryMaxColumnValue
+            );
             $progress->advance();
         }
 
@@ -142,9 +149,15 @@ class SyncService
      * @param  int    $offset        Initial MySQL rows offset
      * @param  int    $limit         MySQL rows limit, per batch
      */
-    protected function sendBatch(string $databaseName, string $tableName, string $orderColumn,
-                                 array $ignoreColumns, int $offset, int $limit, $orderColumnOffset)
-    {
+    protected function sendBatch(
+        string $databaseName,
+        string $tableName,
+        $orderColumn = null,
+        array $ignoreColumns,
+        int $offset,
+        int $limit,
+        $orderColumnOffset
+    ) {
         $mysqlConnection = $this->mysql->getConnection($databaseName);
         $mysqlPlatform = $mysqlConnection->getDatabasePlatform();
         $mysqlTableColumns = $this->mysql->getTableColumns($databaseName, $tableName);
