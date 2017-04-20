@@ -37,6 +37,7 @@ class SyncService
      * @param  string          $tableName     Table Name
      * @param  bool            $createTable   If BigQuery table doesn't exists, create
      * @param  bool            $deleteTable   If BigQuery table exists, delete and recreate
+     * @param  string          $orderColumn   Column to sort and compare result sets
      * @param  array           $ignoreColumns Ignore columns from syncing
      * @param  OutputInterface $output        Output
      */
@@ -45,6 +46,7 @@ class SyncService
         string $tableName,
         bool $createTable,
         bool $deleteTable,
+        string $orderColumn,
         array $ignoreColumns,
         OutputInterface $output
     ) {
@@ -58,16 +60,52 @@ class SyncService
             $createTable = true;
         }
 
-        $mysqlCountTableRows = $this->mysql->getCountTableRows($databaseName, $tableName);
-        $bigQueryCountTableRows = $this->bigQuery->getCountTableRows($tableName);
-
-        if (! $this->bigQuery->tableExists($tableName)) {
-            if (! $createTable) {
+        if (!$this->bigQuery->tableExists($tableName)) {
+            if (!$createTable) {
                 throw new \Exception('BigQuery table ' . $tableName . ' not found');
             }
 
             $this->createTable($databaseName, $tableName);
         }
+
+        if ($orderColumn) {
+            $output->writeln('<fg=green>Using order column "' . $orderColumn . '"</>');
+
+            $mysqlMaxColumnValue = $this->mysql->getMaxColumnValue($databaseName, $tableName, $orderColumn);
+            $bigQueryMaxColumnValue = $this->bigQuery->getMaxColumnValue($tableName, $orderColumn);
+
+            if (strcmp($mysqlMaxColumnValue, $bigQueryMaxColumnValue) === 0) {
+                $output->writeln('<fg=green>Already synced!</>');
+                return;
+            }
+
+            /**
+             * Nothing to delete on a empty table
+             */
+            if ($bigQueryMaxColumnValue) {
+                /**
+                 * Delete latest values, there are no primary keys in bigQuery so we miss some values
+                 */
+                $output->writeln(
+                    '<fg=yellow>Cleaning "' . $tableName . '" for "' .
+                    $orderColumn . '" = "' . $bigQueryMaxColumnValue . '"</>'
+                );
+                $this->bigQuery->deleteColumnValue($tableName, $orderColumn, $bigQueryMaxColumnValue);
+
+                /**
+                 * Now get the latest "real" value
+                 */
+                $bigQueryMaxColumnValue = $this->bigQuery->getMaxColumnValue($tableName, $orderColumn);
+                $output->writeln('<fg=green>Syncing from "' . $bigQueryMaxColumnValue . '"</>');
+            } else {
+                $bigQueryMaxColumnValue = false;
+            }
+        } else {
+            $bigQueryMaxColumnValue = false;
+        }
+
+        $mysqlCountTableRows = $this->mysql->getCountTableRows($databaseName, $tableName, $orderColumn, $bigQueryMaxColumnValue);
+        $bigQueryCountTableRows = $orderColumn ? 0 : $this->bigQuery->getCountTableRows($tableName, $orderColumn);
 
         $rowsDiff = $mysqlCountTableRows - $bigQueryCountTableRows;
 
@@ -75,6 +113,8 @@ class SyncService
         if ($rowsDiff <= 0) {
             $output->writeln('<fg=green>Already synced!</>');
             return;
+        } else {
+            $output->writeln('<fg=green>Syncing ' . $rowsDiff . ' rows</>');
         }
 
         $maxRowsPerBatch = (isset($_ENV['MAX_ROWS_PER_BATCH'])) ? $_ENV['MAX_ROWS_PER_BATCH'] : 20000;
@@ -85,12 +125,13 @@ class SyncService
 
         for ($i = 0; $i < $batches; $i++) {
             $offset = $bigQueryCountTableRows + ($i * $maxRowsPerBatch);
-            $this->sendBatch($databaseName, $tableName, $ignoreColumns, $offset, $maxRowsPerBatch);
+            $this->sendBatch($databaseName, $tableName, $orderColumn, $ignoreColumns,
+                             $offset, $maxRowsPerBatch, $bigQueryMaxColumnValue);
             $progress->advance();
         }
 
-        $progress->finish();
         $output->writeln('<fg=green>Synced!</>');
+        $progress->finish();
     }
 
     /**
@@ -101,13 +142,14 @@ class SyncService
      * @param  int    $offset        Initial MySQL rows offset
      * @param  int    $limit         MySQL rows limit, per batch
      */
-    protected function sendBatch(string $databaseName, string $tableName, array $ignoreColumns, int $offset, int $limit)
+    protected function sendBatch(string $databaseName, string $tableName, string $orderColumn,
+                                 array $ignoreColumns, int $offset, int $limit, $orderColumnOffset)
     {
         $mysqlConnection = $this->mysql->getConnection($databaseName);
         $mysqlPlatform = $mysqlConnection->getDatabasePlatform();
         $mysqlTableColumns = $this->mysql->getTableColumns($databaseName, $tableName);
 
-        $jsonFilePath = __DIR__ . '/../../cache/' . $tableName;
+        $jsonFilePath = ((isset($_ENV['CACHE_DIR'])) ? $_ENV['CACHE_DIR'] : __DIR__ . '/../../cache/') . $tableName;
 
         if (file_exists($jsonFilePath)) {
             unlink($jsonFilePath);
@@ -115,7 +157,22 @@ class SyncService
 
         $json = fopen($jsonFilePath, 'a+');
 
-        $mysqlQueryResult = $mysqlConnection->query('SELECT * FROM ' . $tableName . ' LIMIT ' . $offset . ', ' . $limit);
+        if ($orderColumn) {
+            if ($orderColumnOffset) {
+                $mysqlQueryResult = $mysqlConnection->query(
+                    'SELECT * FROM `' . $tableName . '`' .
+                    ' WHERE ' . $orderColumn . ' > "' . $orderColumnOffset . '"' .
+                    ' ORDER BY ' . $orderColumn .
+                    ' LIMIT '. $offset . ', ' . $limit
+                );
+            } else {
+                $mysqlQueryResult = $mysqlConnection->query(
+                    'SELECT * FROM `' . $tableName . '` ORDER BY ' . $orderColumn . ' LIMIT '. $offset . ', ' . $limit
+                );
+            }
+        } else {
+            $mysqlQueryResult = $mysqlConnection->query('SELECT * FROM `' . $tableName . '` LIMIT ' . $offset . ', ' . $limit);
+        }
 
         while ($row = $mysqlQueryResult->fetch()) {
             foreach ($row as $key => $value) {
@@ -125,8 +182,9 @@ class SyncService
                     continue;
                 }
 
-                // Convert to PHP values, BigQuery requires the correct types on JSON
-                $type = $mysqlTableColumns[$key]->getType();
+                // Convert to PHP values, BigQuery requires the correct types on JSON, uppercase is not supported by
+                // BigQuery - make keys lowercase
+                $type = $mysqlTableColumns[strtolower($key)]->getType();
 
                 if ($type->getName() !== Type::STRING
                     && $type->getName() !== Type::TEXT

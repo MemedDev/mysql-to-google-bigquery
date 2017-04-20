@@ -117,6 +117,61 @@ class BigQuery
     }
 
     /**
+     * Get the maximum value of a column
+     * @param  string $tableName Table name
+     * @param  string $columnName   Column name
+     * @return string               Max value
+     */
+    public function getMaxColumnValue(string $tableName, string $columnName)
+    {
+        $client = $this->getClient();
+
+        $result = $client->runQuery(
+            'SELECT MAX([' . $columnName . ']) AS columnMax FROM [' . $_ENV['BQ_DATASET'] . '.' .  $tableName . ']'
+        );
+
+        $isComplete = $result->isComplete();
+        while (!$isComplete) {
+            sleep(1);
+            $result->reload();
+            $isComplete = $result->isComplete();
+        }
+
+        foreach ($result->rows() as $row) {
+            return $row['columnMax'];
+        }
+
+        return false;
+    }
+
+    /**
+     * Delete all values of a column
+     * @param  string $tableName Table name
+     * @param  string $columnName   Column name
+     * @param  string $columnValue  Value to be deleted
+     * @return string               Result
+     */
+    public function deleteColumnValue(string $tableName, string $columnName, string $columnValue)
+    {
+        $client = $this->getClient();
+
+        $result = $client->runQuery(
+            'DELETE FROM `' . $_ENV['BQ_DATASET'] . '.' .  $tableName . '`' .
+            ' WHERE `' . $columnName .'` = "' . $columnValue . '"',
+            ['useLegacySql' => false]
+        );
+
+        $isComplete = $result->isComplete();
+        while (!$isComplete) {
+            sleep(1);
+            $result->reload();
+            $isComplete = $result->isComplete();
+        }
+
+        return $result;
+    }
+
+    /**
      * Get BigQuery API Client
      * @return BigQueryClient BigQuery API Client
      */
