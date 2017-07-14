@@ -22,28 +22,31 @@ class SyncService
 
     /**
      * Create a BigQuery table using MySQL table schema
-     * @param  string $databaseName Database name
-     * @param  string $tableName    Table name
+     * @param  string $databaseName         Database name
+     * @param  string $tableName            Table name
+     * @param  string $bigQueryTableName    BigQuery Table name
      */
-    protected function createTable(string $databaseName, string $tableName)
+    protected function createTable(string $databaseName, string $tableName, string $bigQueryTableName)
     {
         $mysqlTableColumns = $this->mysql->getTableColumns($databaseName, $tableName);
-        $this->bigQuery->createTable($tableName, $mysqlTableColumns);
+        $this->bigQuery->createTable($bigQueryTableName, $mysqlTableColumns);
     }
 
     /**
      * Execute the service, syncing MySQL and BigQuery table
-     * @param  string          $databaseName  Database Name
-     * @param  string          $tableName     Table Name
-     * @param  bool            $createTable   If BigQuery table doesn't exists, create
-     * @param  bool            $deleteTable   If BigQuery table exists, delete and recreate
-     * @param  string          $orderColumn   Column to sort and compare result sets
-     * @param  array           $ignoreColumns Ignore columns from syncing
-     * @param  OutputInterface $output        Output
+     * @param  string          $databaseName          Database Name
+     * @param  string          $tableName             Table Name
+     * @param  string          $bigQueryTableName     Table Name
+     * @param  bool            $createTable           If BigQuery table doesn't exists, create
+     * @param  bool            $deleteTable           If BigQuery table exists, delete and recreate
+     * @param  string          $orderColumn           Column to sort and compare result sets
+     * @param  array           $ignoreColumns         Ignore columns from syncing
+     * @param  OutputInterface $output                Output
      */
     public function execute(
         string $databaseName,
         string $tableName,
+        string $bigQueryTableName,
         bool $createTable,
         bool $deleteTable,
         $orderColumn,
@@ -52,27 +55,27 @@ class SyncService
     ) {
         if ($deleteTable) {
             // Delete the BigQuery Table before any operation
-            if ($this->bigQuery->tableExists($tableName)) {
-                $this->bigQuery->deleteTable($tableName);
+            if ($this->bigQuery->tableExists($bigQueryTableName)) {
+                $this->bigQuery->deleteTable($bigQueryTableName);
             }
 
             // Create the table after deleting
             $createTable = true;
         }
 
-        if (!$this->bigQuery->tableExists($tableName)) {
+        if (!$this->bigQuery->tableExists($bigQueryTableName)) {
             if (!$createTable) {
-                throw new \Exception('BigQuery table ' . $tableName . ' not found');
+                throw new \Exception('BigQuery table ' . $bigQueryTableName . ' not found');
             }
 
-            $this->createTable($databaseName, $tableName);
+            $this->createTable($databaseName, $tableName, $bigQueryTableName);
         }
 
         if ($orderColumn) {
             $output->writeln('<fg=green>Using order column "' . $orderColumn . '"</>');
 
             $mysqlMaxColumnValue = $this->mysql->getMaxColumnValue($databaseName, $tableName, $orderColumn);
-            $bigQueryMaxColumnValue = $this->bigQuery->getMaxColumnValue($tableName, $orderColumn);
+            $bigQueryMaxColumnValue = $this->bigQuery->getMaxColumnValue($bigQueryTableName, $orderColumn);
 
             if (strcmp($mysqlMaxColumnValue, $bigQueryMaxColumnValue) === 0) {
                 $output->writeln('<fg=green>Already synced!</>');
@@ -87,15 +90,15 @@ class SyncService
                  * Delete latest values, there are no primary keys in bigQuery so we miss some values
                  */
                 $output->writeln(
-                    '<fg=yellow>Cleaning "' . $tableName . '" for "' .
+                    '<fg=yellow>Cleaning "' . $bigQueryTableName . '" for "' .
                     $orderColumn . '" = "' . $bigQueryMaxColumnValue . '"</>'
                 );
-                $this->bigQuery->deleteColumnValue($tableName, $orderColumn, $bigQueryMaxColumnValue);
+                $this->bigQuery->deleteColumnValue($bigQueryTableName, $orderColumn, $bigQueryMaxColumnValue);
 
                 /**
                  * Now get the latest "real" value
                  */
-                $bigQueryMaxColumnValue = $this->bigQuery->getMaxColumnValue($tableName, $orderColumn);
+                $bigQueryMaxColumnValue = $this->bigQuery->getMaxColumnValue($bigQueryTableName, $orderColumn);
                 $output->writeln('<fg=green>Syncing from "' . $bigQueryMaxColumnValue . '"</>');
             } else {
                 $bigQueryMaxColumnValue = false;
@@ -105,7 +108,7 @@ class SyncService
         }
 
         $mysqlCountTableRows = $this->mysql->getCountTableRows($databaseName, $tableName, $orderColumn, $bigQueryMaxColumnValue);
-        $bigQueryCountTableRows = $orderColumn ? 0 : $this->bigQuery->getCountTableRows($tableName, $orderColumn);
+        $bigQueryCountTableRows = $orderColumn ? 0 : $this->bigQuery->getCountTableRows($bigQueryTableName, $orderColumn);
 
         $rowsDiff = $mysqlCountTableRows - $bigQueryCountTableRows;
 
@@ -128,6 +131,7 @@ class SyncService
             $this->sendBatch(
                 $databaseName,
                 $tableName,
+                $bigQueryTableName,
                 $orderColumn,
                 $ignoreColumns,
                 $offset,
@@ -143,15 +147,17 @@ class SyncService
 
     /**
      * Send a batch of data
-     * @param  string $databaseName  Database name
-     * @param  string $tableName     Table name
-     * @param  array  $ignoreColumns Ignore columns from syncing
-     * @param  int    $offset        Initial MySQL rows offset
-     * @param  int    $limit         MySQL rows limit, per batch
+     * @param  string $databaseName          Database name
+     * @param  string $tableName             Table name
+     * @param  string $bigQueryTableName     BigQuery Table name
+     * @param  array  $ignoreColumns         Ignore columns from syncing
+     * @param  int    $offset                Initial MySQL rows offset
+     * @param  int    $limit                 MySQL rows limit, per batch
      */
     protected function sendBatch(
         string $databaseName,
         string $tableName,
+        string $bigQueryTableName,
         $orderColumn = null,
         array $ignoreColumns,
         int $offset,
@@ -226,7 +232,7 @@ class SyncService
         }
 
         // Send JSON to BigQuery
-        $job = $this->bigQuery->loadFromJson($json, $tableName);
+        $job = $this->bigQuery->loadFromJson($json, $bigQueryTableName);
 
         // This is the first job, waits for a first success to continue
         if (! $this->currentJob) {

@@ -26,13 +26,16 @@ class SyncCommand extends Command
                 'order-column',
                 'o',
                 InputOption::VALUE_OPTIONAL,
-                'Column to order the results by. This column is also used to determine if new rows have to be synced.')
+                'Column to order the results by. This column is also used to determine if new rows have to be synced.'
+            )
             ->addOption(
                 'ignore-column',
                 'i',
                 InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY,
-                'Ignore a column from syncing. You can use this option multiple times')
-            ->addOption('database-name', null, InputOption::VALUE_OPTIONAL, 'MySQL database name');
+                'Ignore a column from syncing. You can use this option multiple times'
+            )
+            ->addOption('database-name', null, InputOption::VALUE_OPTIONAL, 'MySQL database name')
+            ->addOption('bigquery-table-name', null, InputOption::VALUE_OPTIONAL, 'BigQuery table name');
     }
 
     /**
@@ -60,10 +63,17 @@ class SyncCommand extends Command
             $databaseName = $_ENV['DB_DATABASE_NAME'];
         }
 
+        $bigQueryTableName = $input->getOption('bigquery-table-name');
+
+        if (empty($bigQueryTableName)) {
+            $bigQueryTableName = $input->getArgument('table-name');
+        }
+
         $service = $container->get('MysqlToGoogleBigQuery\Services\SyncService');
         $service->execute(
             $databaseName,
             $input->getArgument('table-name'),
+            $bigQueryTableName,
             $input->getOption('create-table'),
             $input->getOption('delete-table'),
             $orderColumn,
