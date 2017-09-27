@@ -38,8 +38,12 @@ class Mysql
         $this->conn = \Doctrine\DBAL\DriverManager::getConnection($connParams, $config);
 
         // Replace the DateTime conversion
-        Type::addType('bigquerydatetime', 'MysqlToGoogleBigQuery\Doctrine\BigQueryDateTimeType');
-        Type::addType('bigquerydate', 'MysqlToGoogleBigQuery\Doctrine\BigQueryDateType');
+        if (Type::hasType('bigquerydatetime') === false) {
+            Type::addType('bigquerydatetime', 'MysqlToGoogleBigQuery\Doctrine\BigQueryDateTimeType');
+        }
+        if (Type::hasType('bigquerydate') === false) {
+            Type::addType('bigquerydate', 'MysqlToGoogleBigQuery\Doctrine\BigQueryDateType');
+        }
 
         // Map types to classes
         $this->conn->getDatabasePlatform()->registerDoctrineTypeMapping('date', 'bigquerydate');
