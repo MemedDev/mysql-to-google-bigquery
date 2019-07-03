@@ -12,12 +12,32 @@ class BigQuery
 
     public function isDate($str)
     {
-
+        $timestamps = array('synced_remote_variant',
+                            'synced_remote_conversion',
+                            'expires',
+                            'sub_period_start',
+                            'sub_period_end',
+                            'event_created',
+                            'billing_cycle_anchor',
+                            'canceled_at',
+                            'created',
+                            'current_period_start',
+                            'current_period_end',
+                            'ended_at',
+                            'trial_start',
+                            'trial_end'); 
+        
+        if (in_array(trim(strtolower($str)), $timestamps) )
+        {
+            return true; 
+        }
+        
         $isDate = strpos($str,'date_') !== FALSE || 
-                    strpos($str,'_date') !== FALSE || 
-                    strpos($str,'ts_')  !== FALSE || 
-                    strpos($str,'hour')  !== FALSE || 
-                    strpos($str,'time')  !== FALSE;  
+                  strpos($str,'_date') !== FALSE || 
+                  strpos($str,'ts_')  !== FALSE || 
+                  strpos($str,'_ts')  !== FALSE ||
+                  strpos($str,'hour')  !== FALSE || 
+                  strpos($str,'time')  !== FALSE;  
         return $isDate; 
     }
   
