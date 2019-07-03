@@ -51,7 +51,8 @@ class SyncService
         bool $deleteTable,
         $orderColumn,
         array $ignoreColumns,
-        OutputInterface $output
+        OutputInterface $output, 
+        bool $noData
     ) {
         if ($deleteTable) {
             // Delete the BigQuery Table before any operation
@@ -63,13 +64,24 @@ class SyncService
             $createTable = true;
         }
 
+        echo "\nchecking if we need a table\n";
         if (!$this->bigQuery->tableExists($bigQueryTableName)) {
             if (!$createTable) {
                 throw new \Exception('BigQuery table ' . $bigQueryTableName . ' not found');
             }
-
+            echo "\nCreating table: " . $tableName."\n"; 
             $this->createTable($databaseName, $tableName, $bigQueryTableName);
         }
+        else 
+        {
+            echo "\nWe will not create a table\n"; 
+        }
+
+            if ( $noData )
+            {
+              echo "\nNo data specified\n";
+              exit;
+            }
 
         if ($orderColumn) {
             $output->writeln('<fg=green>Using order column "' . $orderColumn . '"</>');

@@ -9,6 +9,18 @@ class BigQuery
     protected $client;
     protected $tablesMetadata = [];
 
+
+    public function isDate($str)
+    {
+
+        $isDate = strpos($str,'date_') !== FALSE || 
+                    strpos($str,'_date') !== FALSE || 
+                    strpos($str,'ts_')  !== FALSE || 
+                    strpos($str,'hour')  !== FALSE || 
+                    strpos($str,'time')  !== FALSE;  
+        return $isDate; 
+    }
+  
     /**
      * Create a BigQuery Table based on MySQL Table columns
      * @param  string $tableName           Table Name
@@ -23,7 +35,14 @@ class BigQuery
         // STRING, BYTES, INTEGER, FLOAT, BOOLEAN,
         // TIMESTAMP, DATE, TIME, DATETIME
         foreach ($mysqlTableColumns as $name => $column) {
-            switch ($column->getType()->getName()) {
+            
+            if ( $this->isDate($name) ) 
+            {
+                $type = 'TIMESTAMP';
+            }
+            else 
+            {
+                switch ($column->getType()->getName()) {
                 case 'bigquerydate':
                     $type = 'DATE';
                     break;
@@ -71,7 +90,10 @@ class BigQuery
                 default:
                     $type = 'STRING';
                     break;
+                }
             }
+
+            echo "\nName: " . $name . " col: " . $column->getType()->getName(). " determined: " . $type;
 
             $bigQueryColumns[] = [
                 'name' => $name,
@@ -82,11 +104,12 @@ class BigQuery
         $client = $this->getClient();
         $dataset = $client->dataset($_ENV['BQ_DATASET']);
 
-        return $dataset->createTable($tableName, [
+        $ret = $dataset->createTable($tableName, [
             'schema' => [
                 'fields' => $bigQueryColumns
             ],
         ]);
+        return $ret; 
     }
 
     /**
