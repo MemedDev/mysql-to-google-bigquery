@@ -28,6 +28,7 @@ class SyncCommand extends Command
                 InputOption::VALUE_OPTIONAL,
                 'Column to order the results by. This column is also used to determine if new rows have to be synced.'
             )
+            ->addOption('no-data', 'no', InputOption::VALUE_NONE, 'If specified do not copy data')
             ->addOption(
                 'ignore-column',
                 'i',
@@ -46,6 +47,7 @@ class SyncCommand extends Command
         $container = \DI\ContainerBuilder::buildDevContainer();
 
         $ignoreColumns = $input->getOption('ignore-column');
+        $noData= $input->getOption('no-data') ? true : false;  
 
         if (empty($ignoreColumns) && isset($_ENV['IGNORE_COLUMNS'])) {
             $ignoreColumns = explode(',', $_ENV['IGNORE_COLUMNS']);
@@ -78,7 +80,8 @@ class SyncCommand extends Command
             $input->getOption('delete-table'),
             $orderColumn,
             $ignoreColumns,
-            $output
+            $output, 
+            $noData
         );
     }
 }
