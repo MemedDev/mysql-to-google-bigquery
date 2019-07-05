@@ -132,7 +132,7 @@ class SyncService
             $output->writeln('<fg=green>Syncing ' . $rowsDiff . ' rows</>');
         }
 
-        $maxRowsPerBatch = (isset($_ENV['MAX_ROWS_PER_BATCH'])) ? $_ENV['MAX_ROWS_PER_BATCH'] : 200000;
+        $maxRowsPerBatch = (isset($_ENV['MAX_ROWS_PER_BATCH'])) ? $_ENV['MAX_ROWS_PER_BATCH'] : 600000;
         $batches = ceil($rowsDiff / $maxRowsPerBatch);
 
         $output->writeln('<info>Sending ' . $batches . ' batches of ' . $maxRowsPerBatch . ' rows/batch</info>');
