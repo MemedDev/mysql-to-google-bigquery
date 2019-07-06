@@ -29,6 +29,7 @@ class SyncCommand extends Command
                 'Column to order the results by. This column is also used to determine if new rows have to be synced.'
             )
             ->addOption('no-data', 'no', InputOption::VALUE_NONE, 'If specified do not copy data')
+            ->addOption('un-buffer', 'un', InputOption::VALUE_NONE, 'If specified use unbuffered json transfers')
             ->addOption(
                 'ignore-column',
                 'i',
@@ -48,7 +49,7 @@ class SyncCommand extends Command
 
         $ignoreColumns = $input->getOption('ignore-column');
         $noData= $input->getOption('no-data') ? true : false;  
-
+        $unbuffered =  $input->getOption('un-buffer') ? true : false;  
         if (empty($ignoreColumns) && isset($_ENV['IGNORE_COLUMNS'])) {
             $ignoreColumns = explode(',', $_ENV['IGNORE_COLUMNS']);
         }
@@ -81,7 +82,8 @@ class SyncCommand extends Command
             $orderColumn,
             $ignoreColumns,
             $output, 
-            $noData
+            $noData, 
+            $unbuffered
         );
     }
 }
