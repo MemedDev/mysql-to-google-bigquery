@@ -231,7 +231,7 @@ class SyncService
         }
 
         while ($row = $mysqlQueryResult->fetch()) {
-            $row = $this->processRow($mysqlTableColumns, $mysqlPlatform, $row);
+            $row = $this->processRow($mysqlTableColumns, $mysqlPlatform, $ignoreColumns, $row);
             $string = json_encode($row);
 
             // Google BigQuery needs JSON new line delimited file
@@ -260,7 +260,7 @@ class SyncService
         unlink($jsonFilePath);
     }
     
-protected function processRow($mysqlTableColumns, $mysqlPlatform, $row)
+protected function processRow($mysqlTableColumns, $mysqlPlatform, $ignoreColumns, $row)
 {
     foreach ($row as $key => $value) {
         // Ignore the column
@@ -314,7 +314,7 @@ protected function sendBatchUnbuffered(
         $mysqlQueryResult = $mysqlConnection->query('SELECT * FROM `' . $tableName . '`', MYSQLI_USE_RESULT);
 
         while ($row = $mysqlQueryResult->fetch()) {
-            $row = $this->processRow($mysqlTableColumns, $mysqlPlatform, $row); 
+            $row = $this->processRow($mysqlTableColumns, $mysqlPlatform, $ignoreColumns, $row);
             $string = json_encode($row);
 
             // Google BigQuery needs JSON new line delimited file
