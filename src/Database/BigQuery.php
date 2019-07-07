@@ -261,4 +261,3 @@ class BigQuery
         return $dataset->table($tableName)->exists();
     }
 }
-
