@@ -9,38 +9,6 @@ class BigQuery
     protected $client;
     protected $tablesMetadata = [];
 
-
-    public function isDate($str)
-    {
-        $timestamps = array('synced_remote_variant',
-                            'synced_remote_conversion',
-                            'expires',
-                            'sub_period_start',
-                            'sub_period_end',
-                            'event_created',
-                            'billing_cycle_anchor',
-                            'canceled_at',
-                            'created',
-                            'current_period_start',
-                            'current_period_end',
-                            'ended_at',
-                            'trial_start',
-                            'trial_end'); 
-        
-        if (in_array(trim(strtolower($str)), $timestamps) )
-        {
-            return true; 
-        }
-        
-        $isDate = strpos($str,'date_') !== FALSE || 
-                  strpos($str,'_date') !== FALSE || 
-                  strpos($str,'ts_')  !== FALSE || 
-                  strpos($str,'_ts')  !== FALSE ||
-                  strpos($str,'hour')  !== FALSE || 
-                  strpos($str,'time')  !== FALSE;  
-        return $isDate; 
-    }
-  
     /**
      * Create a BigQuery Table based on MySQL Table columns
      * @param  string $tableName           Table Name
@@ -55,14 +23,7 @@ class BigQuery
         // STRING, BYTES, INTEGER, FLOAT, BOOLEAN,
         // TIMESTAMP, DATE, TIME, DATETIME
         foreach ($mysqlTableColumns as $name => $column) {
-            
-            if ( $this->isDate($name) ) 
-            {
-                $type = 'TIMESTAMP';
-            }
-            else 
-            {
-                switch ($column->getType()->getName()) {
+            switch ($column->getType()->getName()) {
                 case 'bigquerydate':
                     $type = 'DATE';
                     break;
@@ -110,10 +71,7 @@ class BigQuery
                 default:
                     $type = 'STRING';
                     break;
-                }
             }
-
-            echo "\nName: " . $name . " col: " . $column->getType()->getName(). " determined: " . $type;
 
             $bigQueryColumns[] = [
                 'name' => $name,
@@ -124,12 +82,11 @@ class BigQuery
         $client = $this->getClient();
         $dataset = $client->dataset($_ENV['BQ_DATASET']);
 
-        $ret = $dataset->createTable($tableName, [
+        return $dataset->createTable($tableName, [
             'schema' => [
                 'fields' => $bigQueryColumns
             ],
         ]);
-        return $ret; 
     }
 
     /**
@@ -304,3 +261,4 @@ class BigQuery
         return $dataset->table($tableName)->exists();
     }
 }
+
