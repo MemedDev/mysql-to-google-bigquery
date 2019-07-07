@@ -65,22 +65,21 @@ class SyncService
             $createTable = true;
         }
 
-        $output->writeln("\nchecking if we need a table"); 
         if (!$this->bigQuery->tableExists($bigQueryTableName)) {
             if (!$createTable) {
                 throw new \Exception('BigQuery table ' . $bigQueryTableName . ' not found');
             }
-            $output->writeln("\nCreating table: " . $tableName.""); 
+            $output->writeln("<fg=green>Creating table: " . $tableName."</>"); 
             $this->createTable($databaseName, $tableName, $bigQueryTableName);
         }
         else 
         {
-            $output->writeln("\nWe will not create a table"); 
+            $output->writeln("<fg=green>We will not create a table</>"); 
         }
 
         if ( $noData )
         {
-          $output->writeln("\nNo data specified");
+          $output->writeln("<fg=green>No data specified, will not sync data.</>");
           exit;
         }
 
@@ -353,7 +352,6 @@ protected function sendBatchUnbuffered(
         $jobInfo = $job->info();
 
         while ($jobInfo['status']['state'] === 'RUNNING') {
-            echo '.';
             $jobInfo = $job->reload();
             // Wait a second to retry
             sleep(1);
