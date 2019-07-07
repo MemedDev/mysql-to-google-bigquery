@@ -352,7 +352,8 @@ protected function sendBatchUnbuffered(
         $jobInfo = $job->info();
 
         while ($jobInfo['status']['state'] === 'RUNNING') {
-            $jobInfo = $job->reload();
+            echo '.';
+	    $jobInfo = $job->reload();
             // Wait a second to retry
             sleep(1);
         }
