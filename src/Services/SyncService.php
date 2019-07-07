@@ -65,12 +65,12 @@ class SyncService
             $createTable = true;
         }
 
-        $output->writeln("\nchecking if we need a table\n"); 
+        $output->writeln("\nchecking if we need a table"); 
         if (!$this->bigQuery->tableExists($bigQueryTableName)) {
             if (!$createTable) {
                 throw new \Exception('BigQuery table ' . $bigQueryTableName . ' not found');
             }
-            $output->writeln("\nCreating table: " . $tableName."\n"); 
+            $output->writeln("\nCreating table: " . $tableName.""); 
             $this->createTable($databaseName, $tableName, $bigQueryTableName);
         }
         else 
@@ -80,7 +80,7 @@ class SyncService
 
         if ( $noData )
         {
-          $output->writeln("\nNo data specified\n");
+          $output->writeln("\nNo data specified");
           exit;
         }
 
