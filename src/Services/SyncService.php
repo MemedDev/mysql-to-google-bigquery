@@ -147,11 +147,7 @@ class SyncService
                     $databaseName,
                     $tableName,
                     $bigQueryTableName,
-                    $orderColumn,
-                    $ignoreColumns,
-                    0,
-                    $maxRowsPerBatch,
-                    $bigQueryMaxColumnValue
+                    $ignoreColumns
                     );
                     $output->writeln('<fg=green>Synced!</>');
         }
@@ -258,43 +254,56 @@ class SyncService
 
         unlink($jsonFilePath);
     }
-    
-protected function processRow($mysqlTableColumns, $mysqlPlatform, $ignoreColumns, $row)
-{
-    foreach ($row as $key => $value) {
-        // Ignore the column
-        if (in_array($key, $ignoreColumns)) {
-            unset($row[$key]);
-            continue;
+
+    /**
+     * Process one record of data
+     *
+     * @param  string $mysqlTableColumns     The columns in the mysql record
+     * @param  string $mysqlPlatform         The platform from the database connection
+     * @param  array  $ignoreColumns         Ignore columns from syncing
+     * @param  array $row                    The record pulled from mysql
+     */    
+    protected function processRow($mysqlTableColumns, $mysqlPlatform, $ignoreColumns, $row)
+    {
+        foreach ($row as $key => $value) {
+            // Ignore the column
+            if (in_array($key, $ignoreColumns)) {
+                unset($row[$key]);
+                continue;
+            }
+        
+            // Convert to PHP values, BigQuery requires the correct types on JSON, uppercase is not supported by
+            // BigQuery - make keys lowercase
+            $type = $mysqlTableColumns[strtolower($key)]->getType();
+        
+            if ($type->getName() !== Type::STRING
+                && $type->getName() !== Type::TEXT
+            ) {
+                $row[$key] = $type->convertToPhpValue($value, $mysqlPlatform);
+            }
+        
+            if (is_string($row[$key])) {
+                $row[$key] = mb_convert_encoding($row[$key], 'UTF-8', mb_detect_encoding($value));
+            }
         }
-    
-        // Convert to PHP values, BigQuery requires the correct types on JSON, uppercase is not supported by
-        // BigQuery - make keys lowercase
-        $type = $mysqlTableColumns[strtolower($key)]->getType();
-    
-        if ($type->getName() !== Type::STRING
-            && $type->getName() !== Type::TEXT
-        ) {
-            $row[$key] = $type->convertToPhpValue($value, $mysqlPlatform);
-        }
-    
-        if (is_string($row[$key])) {
-            $row[$key] = mb_convert_encoding($row[$key], 'UTF-8', mb_detect_encoding($value));
-        }
+        return $row; 
     }
-    return $row; 
-}
 
-
+/**
+ * Send a batch of data UNBUFFERED
+ * 
+ * https://www.php.net/manual/en/mysqlinfo.concepts.buffering.php
+ * 
+ * @param  string $databaseName          Database name
+ * @param  string $tableName             Table name
+ * @param  string $bigQueryTableName     BigQuery Table name
+ * @param  array  $ignoreColumns         Ignore columns from syncing
+ */
 protected function sendBatchUnbuffered(
         string $databaseName,
         string $tableName,
         string $bigQueryTableName,
-        $orderColumn = null,
-        array $ignoreColumns,
-        int $offset,
-        int $limit,
-        $orderColumnOffset
+        array $ignoreColumns
     ) {
         $mysqlConnection = $this->mysql->getConnection($databaseName); 
         $mysqlConnection->getWrappedConnection()->setAttribute(\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
