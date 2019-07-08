@@ -248,7 +248,7 @@ class SyncService
         }
 
         // Send JSON to BigQuery
-        $job = $this->bigQuery->loadFromJson($json, $bigQueryTableName);
+        $job = $this->bigQuery->loadFromJson($json, $bigQueryTableName, false);
 
         // This is the first job, waits for a first success to continue
         if (! $this->currentJob) {
@@ -331,7 +331,7 @@ protected function sendBatchUnbuffered(
         }
 
         // Send JSON to BigQuery
-        $job = $this->bigQuery->loadFromJson($json, $bigQueryTableName);
+        $job = $this->bigQuery->loadFromJson($json, $bigQueryTableName, true);
 
         // This is the first job, waits for a first success to continue
         if (! $this->currentJob) {

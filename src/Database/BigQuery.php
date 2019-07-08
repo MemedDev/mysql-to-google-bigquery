@@ -273,19 +273,36 @@ class BigQuery
      * @param  string          $tableName           Table Name
      * @return Google\Cloud\BigQuery\Job            BigQuery Data Load Job
      */
-    public function loadFromJson($file, $tableName)
+    public function loadFromJson($file, $tableName, $truncate)
     {
         $client = $this->getClient();
         $dataset = $client->dataset($_ENV['BQ_DATASET']);
         $table = $dataset->table($tableName);
-
+        
+        $options = null; 
+        if ( $truncate )
+        {   
+            echo "\nTruncating table "; 
+            $options =             [
+                'jobConfig' => [
+                    'sourceFormat' => 'NEWLINE_DELIMITED_JSON', 
+                    'writeDisposition' => 'WRITE_TRUNCATE', 
+                ]
+            ]; 
+        }
+        else 
+        {
+            echo "\nNot truncating table ";
+            $options =             [
+                'jobConfig' => [
+                    'sourceFormat' => 'NEWLINE_DELIMITED_JSON',
+                ]
+            ];
+        }
+        
         $job = $table->load(
             $file,
-            [
-                'jobConfig' => [
-                    'sourceFormat' => 'NEWLINE_DELIMITED_JSON'
-                ]
-            ]
+            $options
         );
 
         return $job;
