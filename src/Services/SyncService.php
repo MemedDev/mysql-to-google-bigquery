@@ -271,7 +271,7 @@ protected function processRow($mysqlTableColumns, $mysqlPlatform, $ignoreColumns
     
         // Convert to PHP values, BigQuery requires the correct types on JSON, uppercase is not supported by
         // BigQuery - make keys lowercase
-        $type = $mysqlTableColumns[strtolower($key)]->getType();
+        $type = $mysqlTableColumns[$key]->getType();
     
         if ($type->getName() !== Type::STRING
             && $type->getName() !== Type::TEXT
