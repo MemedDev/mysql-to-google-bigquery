@@ -12,6 +12,10 @@ class BigQuery
 
     public function isDate($str)
     {
+        if ( $str == 'mypoints_id') 
+        {
+            return false; 
+        }
         $timestamps = array('synced_remote_variant',
                             'synced_remote_conversion',
                             'expires',
