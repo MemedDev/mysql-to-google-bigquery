@@ -128,6 +128,8 @@ class SyncService
         
         if ( !$unbuffered ) 
         {
+            $output->writeln('<fg=green>Comparing ['.$tableName.'] mysql: '. $mysqlCountTableRows . ' bigquery: ' . $bigQueryCountTableRows. ' </>');
+            
             $rowsDiff = $mysqlCountTableRows - $bigQueryCountTableRows;
         
             // We don't need to sync
