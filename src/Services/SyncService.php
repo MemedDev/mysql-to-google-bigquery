@@ -124,11 +124,11 @@ class SyncService
         {
             	$mysqlCountTableRows = $this->mysql->getCountTableRows($databaseName, $tableName, $orderColumn, $bigQueryMaxColumnValue);
         }
-        $bigQueryCountTableRows = $orderColumn ? 0 : $this->bigQuery->getCountTableRows($bigQueryTableName, $orderColumn);
+        $bigQueryCountTableRows = $orderColumn ? 0 : $this->bigQuery->getCountTableRows($bigQueryTableName);
         
         if ( !$unbuffered ) 
         {
-            $output->writeln('<fg=green>Comparing ['.$tableName.'] mysql: '. $mysqlCountTableRows . ' bigquery: ' . $bigQueryCountTableRows. ' </>');
+            $output->writeln('<fg=green>Comparing ['.$tableName.'] mysql: '. $mysqlCountTableRows . ' bigquery: ' . $this->bigQuery->getCountTableRows($bigQueryTableName). ' </>');
             
             $rowsDiff = $mysqlCountTableRows - $bigQueryCountTableRows;
         
