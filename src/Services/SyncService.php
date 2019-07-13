@@ -127,9 +127,7 @@ class SyncService
         $bigQueryCountTableRows = $orderColumn ? 0 : $this->bigQuery->getCountTableRows($bigQueryTableName);
         
         if ( !$unbuffered ) 
-        {
-            $output->writeln('<fg=green>Comparing ['.$tableName.'] mysql: '. $this->mysql->getCountTableRows($databaseName, $tableName) . ' bigquery: ' . $this->bigQuery->getCountTableRows($bigQueryTableName). ' </>');
-            
+        {            
             $rowsDiff = $mysqlCountTableRows - $bigQueryCountTableRows;
         
             // We don't need to sync
