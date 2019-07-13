@@ -128,7 +128,7 @@ class SyncService
         
         if ( !$unbuffered ) 
         {
-            $output->writeln('<fg=green>Comparing ['.$tableName.'] mysql: '. $mysqlCountTableRows . ' bigquery: ' . $this->bigQuery->getCountTableRows($bigQueryTableName). ' </>');
+            $output->writeln('<fg=green>Comparing ['.$tableName.'] mysql: '. $this->mysql->getCountTableRows($databaseName, $tableName) . ' bigquery: ' . $this->bigQuery->getCountTableRows($bigQueryTableName). ' </>');
             
             $rowsDiff = $mysqlCountTableRows - $bigQueryCountTableRows;
         
