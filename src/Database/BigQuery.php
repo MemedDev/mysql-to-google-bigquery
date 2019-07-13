@@ -164,6 +164,36 @@ class BigQuery
     }
 
     /**
+     * duplicateCheck
+     * @param string $tableName
+     * @param string $duplicateCheck - a set of comma delimited primary keys
+     * @return \Google\Cloud\BigQuery\array|boolean
+     */
+    public function duplicateCheck(string $tableName, string $duplicateCheck)
+    {
+        $client = $this->getClient();
+        
+        $sql = "SELECT count(*),$duplicateCheck FROM [" . $_ENV['BQ_DATASET'] . '.' .  $tableName . "] group by $duplicateCheck having count(*) > 1"; 
+        echo "\n". $sql; 
+        $result = $client->runQuery(
+            $sql 
+        );
+        
+        $isComplete = $result->isComplete();
+        while (!$isComplete) {
+            sleep(1);
+            $result->reload();
+            $isComplete = $result->isComplete();
+        }
+        
+        foreach ($result->rows() as $row) {
+            return $row; 
+        }
+        
+        return false;
+    }
+    
+    /**
      * Get the maximum value of a column
      * @param  string $tableName Table name
      * @param  string $columnName   Column name

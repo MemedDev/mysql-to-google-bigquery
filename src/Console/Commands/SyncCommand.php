@@ -29,6 +29,7 @@ class SyncCommand extends Command
                 'Column to order the results by. This column is also used to determine if new rows have to be synced.'
             )
             ->addOption('no-data', 'no', InputOption::VALUE_NONE, 'If specified do not copy data')
+            ->addOption('duplicate-check', 'dc', InputOption::VALUE_OPTIONAL,  'Given a list of comma delimited primary keys, check for duplicates in BigQuery')
             ->addOption('un-buffer', 'un', InputOption::VALUE_NONE, 'If specified use unbuffered json transfers')
             ->addOption(
                 'ignore-column',
@@ -50,6 +51,8 @@ class SyncCommand extends Command
         $ignoreColumns = $input->getOption('ignore-column');
         $noData= $input->getOption('no-data') ? true : false;  
         $unbuffered =  $input->getOption('un-buffer') ? true : false;  
+        $duplicateCheck = $input->getOption('duplicate-check') ? $input->getOption('duplicate-check')  : null; 
+        
         if (empty($ignoreColumns) && isset($_ENV['IGNORE_COLUMNS'])) {
             $ignoreColumns = explode(',', $_ENV['IGNORE_COLUMNS']);
         }
@@ -83,7 +86,8 @@ class SyncCommand extends Command
             $ignoreColumns,
             $output, 
             $noData, 
-            $unbuffered
+            $unbuffered, 
+            $duplicateCheck
         );
     }
 }

@@ -53,7 +53,8 @@ class SyncService
         array $ignoreColumns,
         OutputInterface $output, 
         bool $noData, 
-        bool $unbuffered
+        bool $unbuffered, 
+        bool $duplicateCheck
     ) {
         if ($deleteTable) {
             // Delete the BigQuery Table before any operation
@@ -83,6 +84,22 @@ class SyncService
           $output->writeln("\nNo data specified");
           exit;
         }
+        
+        if ( $duplicateCheck )
+        {
+            $hasDuplicates = $this->bigQuery->duplicateCheck($bigQueryTableName, $duplicateCheck);
+            if ( $hasDuplicates ) 
+            {
+                $output->writeln('<fg=green>Dpulicates found!</>');
+                print_R($hasDuplicates); 
+            }
+            else
+            {
+                $output->writeln('<fg=green>Dpulicates not found!</>');
+            }
+            exit; 
+        }
+        
 
         if (!$unbuffered && $orderColumn) {
             $output->writeln('<fg=green>Using order column "' . $orderColumn . '"</>');
