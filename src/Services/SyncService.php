@@ -53,8 +53,7 @@ class SyncService
         array $ignoreColumns,
         OutputInterface $output, 
         bool $noData, 
-        bool $unbuffered, 
-        bool $duplicateCheck
+        bool $unbuffered
     ) {
         if ($deleteTable) {
             // Delete the BigQuery Table before any operation
@@ -84,22 +83,6 @@ class SyncService
           $output->writeln("\nNo data specified");
           exit;
         }
-        
-        if ( $duplicateCheck )
-        {
-            $hasDuplicates = $this->bigQuery->duplicateCheck($bigQueryTableName, $duplicateCheck);
-            if ( $hasDuplicates ) 
-            {
-                $output->writeln('<fg=green>Dpulicates found!</>');
-                print_R($hasDuplicates); 
-            }
-            else
-            {
-                $output->writeln('<fg=green>Dpulicates not found!</>');
-            }
-            exit; 
-        }
-        
 
         if (!$unbuffered && $orderColumn) {
             $output->writeln('<fg=green>Using order column "' . $orderColumn . '"</>');
@@ -141,10 +124,10 @@ class SyncService
         {
             	$mysqlCountTableRows = $this->mysql->getCountTableRows($databaseName, $tableName, $orderColumn, $bigQueryMaxColumnValue);
         }
-        $bigQueryCountTableRows = $orderColumn ? 0 : $this->bigQuery->getCountTableRows($bigQueryTableName);
+        $bigQueryCountTableRows = $orderColumn ? 0 : $this->bigQuery->getCountTableRows($bigQueryTableName, $orderColumn);
         
         if ( !$unbuffered ) 
-        {            
+        {
             $rowsDiff = $mysqlCountTableRows - $bigQueryCountTableRows;
         
             // We don't need to sync
