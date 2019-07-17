@@ -26,7 +26,7 @@ class Mysql
             'user' => $_ENV['DB_USERNAME'],
             'password' => $_ENV['DB_PASSWORD'],
             'host' => $_ENV['DB_HOST'],
-            'charset'  => 'utf8',
+            'charset'  => 'latin1',
             // Special doctrine driver, with reconnect attempts support
             'wrapperClass' => 'Facile\DoctrineMySQLComeBack\Doctrine\DBAL\Connection',
             'driverClass' => 'Facile\DoctrineMySQLComeBack\Doctrine\DBAL\Driver\PDOMySql\Driver',
