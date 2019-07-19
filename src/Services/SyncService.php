@@ -213,6 +213,8 @@ class SyncService
 
         $json = fopen($jsonFilePath, 'a+');
 
+	$mysqlQueryResult = $mysqlConnection->query("set names latin1"); 
+
         if ($orderColumn) {
             if ($orderColumnOffset) {
                 $mysqlQueryResult = $mysqlConnection->query(
@@ -276,11 +278,11 @@ protected function processRow($mysqlTableColumns, $mysqlPlatform, $ignoreColumns
         if ($type->getName() !== Type::STRING
             && $type->getName() !== Type::TEXT
         ) {
-            $row[$key] = $type->convertToPhpValue($value, $mysqlPlatform);
+            $row[$key] = @$type->convertToPhpValue($value, $mysqlPlatform);
         }
     
         if (is_string($row[$key])) {
-            $row[$key] = mb_convert_encoding($row[$key], 'UTF-8', mb_detect_encoding($value));
+            $row[$key] = @mb_convert_encoding($row[$key], 'UTF-8', mb_detect_encoding($value));
         }
     }
     return $row; 
