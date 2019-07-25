@@ -314,7 +314,7 @@ protected function sendBatchUnbuffered(
         $json = fopen($jsonFilePath, 'a+');
 
         $offset = 0;
-        $total_per_batch = 100000; 
+        $total_per_batch = 1000000; 
         
         do { 
             $mysqlQueryResult = $mysqlConnection->query('SELECT * FROM `' . $tableName . '` '. "limit $offset,$total_per_batch", MYSQLI_USE_RESULT);
