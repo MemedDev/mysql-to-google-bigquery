@@ -313,24 +313,16 @@ protected function sendBatchUnbuffered(
 
         $json = fopen($jsonFilePath, 'a+');
 
-        $offset = 0;
-        $total_per_batch = 1000000; 
-        
-        do { 
-            $mysqlQueryResult = $mysqlConnection->query('SELECT * FROM `' . $tableName . '` '. "limit $offset,$total_per_batch", MYSQLI_USE_RESULT);
-            
-            $found = 0; 
-            while ($row = $mysqlQueryResult->fetch()) {
-                $row = $this->processRow($mysqlTableColumns, $mysqlPlatform, $ignoreColumns, $row);
-                $string = json_encode($row);
-    
-                // Google BigQuery needs JSON new line delimited file
-                // Each line of the file will be each MySQL row converted to JSON
-                fwrite($json, json_encode($row) . PHP_EOL);
-                $found++; 
-            }
-            $offset+=$total_per_batch; 
-        } while ($found > 0); 
+        $mysqlQueryResult = $mysqlConnection->query('SELECT * FROM `' . $tableName . '`', MYSQLI_USE_RESULT);
+
+        while ($row = $mysqlQueryResult->fetch()) {
+            $row = $this->processRow($mysqlTableColumns, $mysqlPlatform, $ignoreColumns, $row);
+            $string = json_encode($row);
+
+            // Google BigQuery needs JSON new line delimited file
+            // Each line of the file will be each MySQL row converted to JSON
+            fwrite($json, json_encode($row) . PHP_EOL);
+        }
 
         // Rewind to the beginning of the JSON file
         rewind($json);
