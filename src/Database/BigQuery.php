@@ -41,7 +41,7 @@ class BigQuery
                     break;
 
                 case Type::DATE:
-                    $type = 'DATETIME';
+                    $type = 'DATE';
                     break;
 
                 case Type::DATETIME:
