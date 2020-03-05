@@ -54,6 +54,9 @@ class Mysql
         $this->conn->getDatabasePlatform()->registerDoctrineTypeMapping('json', 'text');
         $this->conn->getDatabasePlatform()->registerDoctrineTypeMapping('enum', 'text');
 
+		// Add support for tinyint.
+		$this->conn->getDatabasePlatform()->registerDoctrineTypeMapping('tinyint', 'integer');
+
         return $this->conn;
     }
 
