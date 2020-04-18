@@ -53,7 +53,8 @@ class SyncService
         array $ignoreColumns,
         OutputInterface $output, 
         bool $noData, 
-        bool $unbuffered
+        bool $unbuffered, 
+        string $cacheDir
     ) {
         if ($deleteTable) {
             // Delete the BigQuery Table before any operation
@@ -63,6 +64,12 @@ class SyncService
 
             // Create the table after deleting
             $createTable = true;
+        }
+        
+        
+        if ( $cacheDir ) 
+        {
+            $_ENV['CACHE_DIR']=$cacheDir; 
         }
 
         $output->writeln("\nchecking if we need a table"); 

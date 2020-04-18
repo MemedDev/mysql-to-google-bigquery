@@ -50,6 +50,7 @@ class SyncCommand extends Command
         $ignoreColumns = $input->getOption('ignore-column');
         $noData= $input->getOption('no-data') ? true : false;  
         $unbuffered =  $input->getOption('un-buffer') ? true : false;  
+        
         if (empty($ignoreColumns) && isset($_ENV['IGNORE_COLUMNS'])) {
             $ignoreColumns = explode(',', $_ENV['IGNORE_COLUMNS']);
         }
@@ -61,7 +62,8 @@ class SyncCommand extends Command
         }
 
         $databaseName = $input->getOption('database-name');
-
+        $cacheDir = $input->getOption('cache-dir');
+        
         if (empty($databaseName)) {
             $databaseName = $_ENV['DB_DATABASE_NAME'];
         }
@@ -83,7 +85,8 @@ class SyncCommand extends Command
             $ignoreColumns,
             $output, 
             $noData, 
-            $unbuffered
+            $unbuffered, 
+            $cacheDir
         );
     }
 }
