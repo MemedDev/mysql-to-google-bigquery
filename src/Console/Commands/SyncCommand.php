@@ -37,6 +37,7 @@ class SyncCommand extends Command
                 'Ignore a column from syncing. You can use this option multiple times'
             )
             ->addOption('database-name', null, InputOption::VALUE_OPTIONAL, 'MySQL database name')
+            ->addOption('cache-dir', null, InputOption::VALUE_OPTIONAL, 'Cache Dir')
             ->addOption('bigquery-table-name', null, InputOption::VALUE_OPTIONAL, 'BigQuery table name');
     }
 
