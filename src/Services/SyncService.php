@@ -54,7 +54,7 @@ class SyncService
         OutputInterface $output, 
         bool $noData, 
         bool $unbuffered, 
-        string $cacheDir
+        $cacheDir
     ) {
         if ($deleteTable) {
             // Delete the BigQuery Table before any operation
