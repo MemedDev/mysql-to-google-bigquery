@@ -66,7 +66,7 @@ class SyncService
             $createTable = true;
         }
         
-        
+        $output->writeln("\ncache directory: " . $cacheDir); 
         if ( $cacheDir ) 
         {
             $_ENV['CACHE_DIR']=$cacheDir; 
