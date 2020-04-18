@@ -212,7 +212,7 @@ class SyncService
         $mysqlPlatform = $mysqlConnection->getDatabasePlatform();
         $mysqlTableColumns = $this->mysql->getTableColumns($databaseName, $tableName);
 
-        $jsonFilePath = ((isset($_ENV['CACHE_DIR'])) ? $_ENV['CACHE_DIR'] : __DIR__ . '/../../cache/') . $tableName;
+        $jsonFilePath = ((isset($_ENV['CACHE_DIR'])) ? $_ENV['CACHE_DIR'] : __DIR__ . '/../../cache/') . $tableName.microtime(true); 
 
         if (file_exists($jsonFilePath)) {
             unlink($jsonFilePath);
@@ -312,7 +312,7 @@ protected function sendBatchUnbuffered(
         $mysqlPlatform = $mysqlConnection->getDatabasePlatform();
         $mysqlTableColumns = $this->mysql->getTableColumns($databaseName, $tableName);
 
-        $jsonFilePath = ((isset($_ENV['CACHE_DIR'])) ? $_ENV['CACHE_DIR'] : __DIR__ . '/../../cache/') . $tableName;
+        $jsonFilePath = ((isset($_ENV['CACHE_DIR'])) ? $_ENV['CACHE_DIR'] : __DIR__ . '/../../cache/') . $tableName.microtime(true); 
 
         if (file_exists($jsonFilePath)) {
             unlink($jsonFilePath);
