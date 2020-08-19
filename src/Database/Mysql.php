@@ -26,6 +26,7 @@ class Mysql
             'user' => $_ENV['DB_USERNAME'],
             'password' => $_ENV['DB_PASSWORD'],
             'host' => $_ENV['DB_HOST'],
+            'port' => $_ENV['DB_PORT'],
             'charset'  => 'utf8',
             // Special doctrine driver, with reconnect attempts support
             'wrapperClass' => 'Facile\DoctrineMySQLComeBack\Doctrine\DBAL\Connection',
