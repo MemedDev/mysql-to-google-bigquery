@@ -65,6 +65,7 @@ DB_DATABASE_NAME=mysql-database-name
 DB_USERNAME=mysql_username
 DB_PASSWORD=mysql_password
 DB_HOST=mysql-host
+DB_PORT=3306
 
 IGNORE_COLUMNS=password,hidden_column,another_column
 ```
