@@ -1,0 +1,77 @@
+.home {
+
+    section {
+        padding: 90px 0 80px;
+
+        // Offset so that the title is not hidden behind the nav bar
+        >[id]:before {
+            display: block;
+            content: " ";
+            margin-top: -75px;
+            height: 75px;
+            visibility: hidden;
+        }
+
+        pre {
+            background-color: white;
+            border-color: #e7e7e7;
+            box-shadow: 0 2px 6px #e7e7e7;
+            margin-bottom: 15px;
+        }
+    }
+    section.odd {
+        background-color: @background-colored;
+
+        pre {
+            background-color: white;
+            border-color: #D8D8D8;
+        }
+        hr {
+            border-color: #D8D8D8;
+        }
+    }
+
+    h2 {
+        text-align: center;
+        margin-top: 0;
+        margin-bottom: 40px;
+        color: @brand-primary;
+        a:hover, a:active {
+            text-decoration: none;
+        }
+    }
+    h4 {
+        text-transform: uppercase;
+        font-size: 16px;
+    }
+
+    .jumbotron {
+        background: none;
+        text-align: center;
+        padding: 70px 0;
+        h1 {
+            margin-bottom: 25px;
+            strong {
+                color: @brand-primary;
+            }
+        }
+        p {
+            font-size: 150%;
+            margin-bottom: 35px;
+        }
+    }
+
+    .framework-integrations {
+        text-align: center;
+        .thumbnail {
+            padding-top: 20px;
+        }
+        img {
+            height: 70px;
+        }
+        h4 {
+            font-size: 15px;
+        }
+    }
+
+}

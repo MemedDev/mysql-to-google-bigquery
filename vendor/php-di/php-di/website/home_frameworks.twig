@@ -1,0 +1,36 @@
+<div id="integrations" class="container framework-integrations">
+
+    <h2><a href="#integrations">Integrations</a></h2>
+
+    <p>
+        PHP-DI integrates easily in your application or in frameworks.
+    </p>
+
+    <div class="row">
+
+        {% for id, name in frameworks %}
+            <div class="col-sm-3 col-md-2">
+                <div class="thumbnail">
+                    <a href="{{ baseUrl }}/doc/frameworks/{{ id }}.html" title="{{ name }}">
+                        <img class="framework-logo" src="{{ baseUrl }}/img/frameworks/{{ id }}.png" alt="{{ name }}">
+                    </a>
+                    <div class="caption">
+                        <h4>
+                            <a href="{{ baseUrl }}/doc/frameworks/{{ id }}.html" title="{{ name }} integration guide">{{ name }}</a>
+                        </h4>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+
+    </div>
+
+    <p>
+        No framework? It works too, have a look at this <a href="https://github.com/PHP-DI/demo">demo application</a>.
+    </p>
+
+    <p class="text-center">
+        <a href="doc/#frameworks-integration" class="btn btn-default">Learn more</a>
+    </p>
+
+</div>

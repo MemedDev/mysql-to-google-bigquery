@@ -1,0 +1,39 @@
+{% extends "default.twig" %}
+
+{% block content %}
+
+    <div class="container documentation">
+
+        <div class="sidebar">
+            <ul>
+                {% for itemId, item in menu.items %}
+                    <li>
+                        <span class="section-title">{{ item.section }}</span>
+
+                        <ul>
+                            {% for itemId, item in item.items %}
+                                <li class="{{ itemId == current_menu ? 'active' }}">
+                                    <a href="{{ item.absoluteUrl|default(baseUrl ~ '/' ~ item.url) }}">
+                                        {{ item.text|raw }}
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <article>
+            <div class="pull-right">
+                <a href="https://github.com/PHP-DI/PHP-DI/blob/master/{{ currentFile }}" class="btn btn-default btn-sm">
+                    Edit this page on GitHub
+                </a>
+            </div>
+
+            {{ content|raw }}
+        </article>
+
+    </div>
+
+{% endblock %}
