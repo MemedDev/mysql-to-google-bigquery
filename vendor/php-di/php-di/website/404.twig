@@ -1,0 +1,36 @@
+{% extends "default.twig" %}
+
+{% block content %}
+
+    <section class='section-wrapper not-found-w'>
+        <div class='container'>
+            <div class="row">
+                <div class="col-md-6 col-md-offset-3">
+
+                    <h1>
+                        <i class="fa fa-exclamation-triangle"></i>
+                        Page not found
+                    </h1>
+
+                    <p>
+                        Sorry the page you requested may have been moved or deleted :(
+                    </p>
+
+                    <p>
+                        <a href="{{ baseUrl }}/" class="btn btn-default btn-lg">
+                            <i class='fa fa-home'></i>
+                            Go to the homepage
+                        </a>
+                        <a href="{{ baseUrl }}/doc" class="btn btn-default btn-lg">
+                            <i class='fa fa-book'></i>
+                            Go to the documentation index
+                        </a>
+                    </p>
+
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+{% endblock %}

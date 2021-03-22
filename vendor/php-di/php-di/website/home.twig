@@ -1,0 +1,59 @@
+{% extends "default.twig" %}
+
+{% block content %}
+    <div class="home">
+
+        <section class="jumbotron">
+            <div class="container">
+                <h1>
+                    PHP-DI <strong>5</strong>
+                </h1>
+                <p>
+                    The dependency injection container for humans
+                </p>
+                <p>
+                    <a href="{{ baseUrl }}/doc/getting-started.html" class="btn btn-lg btn-primary">
+                        Get started
+                    </a>
+                    <a href="{{ baseUrl }}/doc/" class="btn btn-lg btn-default">
+                        Documentation
+                    </a>
+                </p>
+            </div>
+        </section>
+
+        <section class="odd">
+            {% include 'home_autowiring.twig' %}
+        </section>
+
+        <section class="">
+            {% include 'home_configuration.twig' %}
+        </section>
+
+        <section class="odd">
+            {% include 'home_modules.twig' %}
+        </section>
+
+        <section class="">
+            {% include 'home_container.twig' %}
+        </section>
+
+        <section class="odd">
+            {% include 'home_frameworks.twig' %}
+        </section>
+
+    </div>
+
+{% endblock %}
+
+{% block footerTop %}
+    <p>
+        Developed with care -
+        <a href='https://travis-ci.org/PHP-DI/PHP-DI'>
+            <img src="https://img.shields.io/travis/PHP-DI/PHP-DI.svg?style=flat-square"></a>
+        <a href='https://scrutinizer-ci.com/g/PHP-DI/PHP-DI/'>
+            <img src="https://img.shields.io/scrutinizer/g/PHP-DI/PHP-DI.svg?style=flat-square"></a>
+        <a href='https://coveralls.io/r/PHP-DI/PHP-DI?branch=master'>
+            <img src="https://img.shields.io/coveralls/PHP-DI/PHP-DI/master.svg?style=flat-square" alt='Coverage Status'></a>
+    </p>
+{% endblock %}
