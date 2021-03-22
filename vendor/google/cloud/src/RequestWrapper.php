@@ -247,7 +247,7 @@ class RequestWrapper
             throw $this->convertToGoogleException($ex);
         }
 
-        $credentials['expiry'] = time() + $this->credentials['expires_in'];
+        $credentials['expiry'] = time() + @$this->credentials['expires_in'];
 
         return $credentials;
     }
