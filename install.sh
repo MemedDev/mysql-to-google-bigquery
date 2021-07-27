@@ -10,6 +10,7 @@ echo "CURRENT USER"
 
 whoami; 
 
+
 echo "COMPOSER UPDATE" 
 
 rm -fr vendor 
