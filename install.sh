@@ -1,5 +1,17 @@
 #!/bin/bash
 
+set -e; 
+
+echo "CURRENT PATH" 
+
+pwd; 
+
+echo "CURRENT USER" 
+
+whoami; 
+
+echo "COMPOSER UPDATE" 
+
 rm -fr vendor 
 
 composer install 
