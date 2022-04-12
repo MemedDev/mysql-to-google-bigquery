@@ -348,7 +348,7 @@ protected function sendBatchUnbuffered(
         }
 
         $this->currentJob = $job;
-        //unlink($jsonFilePath);
+        unlink($jsonFilePath);
     }
 
 
