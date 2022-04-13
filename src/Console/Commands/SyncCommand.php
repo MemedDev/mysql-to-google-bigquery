@@ -30,8 +30,8 @@ class SyncCommand extends Command
             )
             ->addOption('no-data', 'no', InputOption::VALUE_NONE, 'If specified do not copy data')
             ->addOption('un-buffer', 'un', InputOption::VALUE_NONE, 'If specified use unbuffered json transfers')
-            ->addOption(
-                'ignore-column',
+            ->addOption('no-delete-unbuffer', 'nd', InputOption::VALUE_NONE, 'If specified do not delete unbuffered data files')
+            ->addOption('ignore-column',
                 'i',
                 InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY,
                 'Ignore a column from syncing. You can use this option multiple times'
@@ -51,7 +51,8 @@ class SyncCommand extends Command
         $ignoreColumns = $input->getOption('ignore-column');
         $noData= $input->getOption('no-data') ? true : false;  
         $unbuffered =  $input->getOption('un-buffer') ? true : false;  
-        
+        $noDeleteUnbuffer = $input->getOption('no-delete-unbuffer') ? true : false;
+
         if (empty($ignoreColumns) && isset($_ENV['IGNORE_COLUMNS'])) {
             $ignoreColumns = explode(',', $_ENV['IGNORE_COLUMNS']);
         }
@@ -87,6 +88,7 @@ class SyncCommand extends Command
             $output, 
             $noData, 
             $unbuffered, 
+            $noDeleteUnbuffer,
             $cacheDir
         );
     }

@@ -54,6 +54,7 @@ class SyncService
         OutputInterface $output, 
         bool $noData, 
         bool $unbuffered, 
+        book $noDeleteUnbuffer,
         $cacheDir
     ) {
         if ($deleteTable) {
@@ -159,7 +160,8 @@ class SyncService
                     $ignoreColumns,
                     0,
                     $maxRowsPerBatch,
-                    $bigQueryMaxColumnValue
+                    $bigQueryMaxColumnValue,
+                    $noDeleteUnbuffer
                     );
                     $output->writeln('<fg=green>Synced!</>');
         }
@@ -304,7 +306,8 @@ protected function sendBatchUnbuffered(
         array $ignoreColumns,
         int $offset,
         int $limit,
-        $orderColumnOffset
+        $orderColumnOffset, 
+        bool $noDeleteUnbuffer
     ) {
         $mysqlConnection = $this->mysql->getConnection($databaseName); 
         $mysqlConnection->getWrappedConnection()->setAttribute(\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
@@ -348,7 +351,9 @@ protected function sendBatchUnbuffered(
         }
 
         $this->currentJob = $job;
-        unlink($jsonFilePath);
+        if ( $noDeleteUnbuffer ) {
+            unlink($jsonFilePath);
+        }
     }
 
 
